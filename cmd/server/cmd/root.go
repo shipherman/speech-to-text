@@ -4,8 +4,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"time"
 
+	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +28,12 @@ func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
+	}
+
+	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
+	err = clients.ReqSTT("/home/tas/Downloads/sample.wav")
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
