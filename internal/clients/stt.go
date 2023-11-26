@@ -19,6 +19,8 @@ type options struct {
 
 // STT config
 var cfg = options{}
+
+// temporary logger
 var logEntry = middleware.DefaultLogFormatter{Logger: log.New(os.Stdout, "", log.LstdFlags)}
 
 func ConfigureSTT(a string, t time.Duration) {
@@ -73,9 +75,9 @@ func ReqSTT(filepath string) error {
 	b := backoff.NewExponentialBackOff()
 	b.MaxInterval = cfg.Timeout
 	err = backoff.Retry(f, b)
-	// err = f()
 	if err != nil {
 		logEntry.Logger.Print(fmt.Errorf("ReqSTT error: %w", err))
+		return err
 	}
 
 	return nil
