@@ -58,7 +58,6 @@ func ReqSTT(filepath string) error {
 		fmt.Printf("resp code: %v; resp body: %v; Addr: %s\n", resp.StatusCode(), resp, reqAddress)
 
 		switch resp.StatusCode() {
-		// Успешная обработка запроса
 		case 200:
 			fmt.Println(string(resp.Body()))
 		// Server error

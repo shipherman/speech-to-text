@@ -10,3 +10,10 @@ type User struct {
 	Name    string
 	Surname string
 }
+
+// Store for audio files
+type Store interface {
+	Configure() error
+	Save() error
+	Delete() error
+}
