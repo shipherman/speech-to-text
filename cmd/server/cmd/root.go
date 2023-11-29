@@ -4,11 +4,14 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/shipherman/speech-to-text/internal/clients"
+	"github.com/shipherman/speech-to-text/internal/transport/routes"
 	"github.com/spf13/cobra"
 )
 
@@ -30,10 +33,24 @@ func Execute() {
 		os.Exit(1)
 	}
 
+	// Configure clients to connect to other services
+	// STT
 	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
-	err = clients.ReqSTT("/home/tas/Downloads/sample.wav")
-	if err != nil {
-		fmt.Println(err)
+
+	// err = clients.ReqSTT("/home/tas/Downloads/sample.wav")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// Server configuration
+	server := http.Server{
+		Addr:    "127.0.0.1:8080",
+		Handler: routes.Router,
+	}
+
+	// Run server
+	for {
+		log.Fatal(server.ListenAndServe())
 	}
 }
 
