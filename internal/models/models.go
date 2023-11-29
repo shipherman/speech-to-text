@@ -1,5 +1,12 @@
 package models
 
+// Server application configuration
+type Config struct {
+	Address    string
+	DSN        string
+	STTAddress string
+}
+
 type Audio struct {
 	Path string
 }
@@ -17,3 +24,6 @@ type Store interface {
 	Save() error
 	Delete() error
 }
+
+// Structure to provide username throuh context to handlers
+type UserCtxKey struct{}
