@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+// Additional imports go here
+
+package stt.service.v1;
+
+option go_package = "github.com/shipherman/speech-to-text/proto/gen/stt/service/v1;sttservice";
+
+// STT service definition
+service STTService {
+    rpc TranscribeAudio(Audio) returns (stream Text) {}
+}
+
+message Audio {
+    string path = 1;
+    string hash = 2;
+}
+
+message Text {
+    string text = 1;
+    uint32 len = 2;
+}
