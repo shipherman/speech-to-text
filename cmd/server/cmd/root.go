@@ -5,14 +5,18 @@ package cmd
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
 
 	_ "github.com/lib/pq"
+	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/shipherman/speech-to-text/internal/transport/routes"
+
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -48,8 +52,17 @@ func Execute() {
 		Handler: routes.Router,
 	}
 
+	tcpListen, err := net.Listen("tcp", ":8282")
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcServer := grpc.NewServer()
+
+	sttservice.RegisterSttServiceServer(grpcServer, &TranscribeServer{})
+
 	// Run server
 	for {
+		log.Fatal(grpcServer.Serve(tcpListen))
 		log.Fatal(server.ListenAndServe())
 	}
 }

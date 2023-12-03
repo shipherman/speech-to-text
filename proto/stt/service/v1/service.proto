@@ -4,19 +4,44 @@ syntax = "proto3";
 
 package stt.service.v1;
 
-option go_package = "github.com/shipherman/speech-to-text/proto/gen/stt/service/v1;sttservice";
+option go_package = "github.com/shipherman/speech-to-text/gen/stt/service/v1;sttservice";
 
 // STT service definition
-service STTService {
-    rpc TranscribeAudio(Audio) returns (stream Text) {}
+service SttService {
+    rpc TranscribeAudio(Audio) returns (stream Status) {}
+    rpc GetHistory(User) returns (History) {}
+}
+
+
+
+enum EnumStatus {
+    STATUS_ACCEPTED = 0;
+    STATUS_DECLINED = 1;
+    STATUS_ORDERED = 2;
+    STATUS_PROCESSING = 3;
+    STATUS_DONE = 4;
+}
+
+message Status {
+    EnumStatus status = 1;
+}
+
+message User {
+    string name = 1;
+    string email = 2;
 }
 
 message Audio {
-    string path = 1;
+    bytes audio = 1;
     string hash = 2;
 }
 
 message Text {
     string text = 1;
     uint32 len = 2;
+}
+
+message History {
+    string data = 1;
+    Text text = 2;
 }

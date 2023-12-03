@@ -21,30 +21,32 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	STTService_TranscribeAudio_FullMethodName = "/stt.service.v1.STTService/TranscribeAudio"
+	SttService_TranscribeAudio_FullMethodName = "/stt.service.v1.SttService/TranscribeAudio"
+	SttService_GetHistory_FullMethodName      = "/stt.service.v1.SttService/GetHistory"
 )
 
-// STTServiceClient is the client API for STTService service.
+// SttServiceClient is the client API for SttService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type STTServiceClient interface {
-	TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (STTService_TranscribeAudioClient, error)
+type SttServiceClient interface {
+	TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (SttService_TranscribeAudioClient, error)
+	GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error)
 }
 
-type sTTServiceClient struct {
+type sttServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewSTTServiceClient(cc grpc.ClientConnInterface) STTServiceClient {
-	return &sTTServiceClient{cc}
+func NewSttServiceClient(cc grpc.ClientConnInterface) SttServiceClient {
+	return &sttServiceClient{cc}
 }
 
-func (c *sTTServiceClient) TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (STTService_TranscribeAudioClient, error) {
-	stream, err := c.cc.NewStream(ctx, &STTService_ServiceDesc.Streams[0], STTService_TranscribeAudio_FullMethodName, opts...)
+func (c *sttServiceClient) TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (SttService_TranscribeAudioClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SttService_ServiceDesc.Streams[0], SttService_TranscribeAudio_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &sTTServiceTranscribeAudioClient{stream}
+	x := &sttServiceTranscribeAudioClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -54,83 +56,119 @@ func (c *sTTServiceClient) TranscribeAudio(ctx context.Context, in *Audio, opts 
 	return x, nil
 }
 
-type STTService_TranscribeAudioClient interface {
-	Recv() (*Text, error)
+type SttService_TranscribeAudioClient interface {
+	Recv() (*Status, error)
 	grpc.ClientStream
 }
 
-type sTTServiceTranscribeAudioClient struct {
+type sttServiceTranscribeAudioClient struct {
 	grpc.ClientStream
 }
 
-func (x *sTTServiceTranscribeAudioClient) Recv() (*Text, error) {
-	m := new(Text)
+func (x *sttServiceTranscribeAudioClient) Recv() (*Status, error) {
+	m := new(Status)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-// STTServiceServer is the server API for STTService service.
-// All implementations must embed UnimplementedSTTServiceServer
+func (c *sttServiceClient) GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error) {
+	out := new(History)
+	err := c.cc.Invoke(ctx, SttService_GetHistory_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SttServiceServer is the server API for SttService service.
+// All implementations must embed UnimplementedSttServiceServer
 // for forward compatibility
-type STTServiceServer interface {
-	TranscribeAudio(*Audio, STTService_TranscribeAudioServer) error
-	mustEmbedUnimplementedSTTServiceServer()
+type SttServiceServer interface {
+	TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error
+	GetHistory(context.Context, *User) (*History, error)
+	mustEmbedUnimplementedSttServiceServer()
 }
 
-// UnimplementedSTTServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedSTTServiceServer struct {
+// UnimplementedSttServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedSttServiceServer struct {
 }
 
-func (UnimplementedSTTServiceServer) TranscribeAudio(*Audio, STTService_TranscribeAudioServer) error {
+func (UnimplementedSttServiceServer) TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error {
 	return status.Errorf(codes.Unimplemented, "method TranscribeAudio not implemented")
 }
-func (UnimplementedSTTServiceServer) mustEmbedUnimplementedSTTServiceServer() {}
+func (UnimplementedSttServiceServer) GetHistory(context.Context, *User) (*History, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHistory not implemented")
+}
+func (UnimplementedSttServiceServer) mustEmbedUnimplementedSttServiceServer() {}
 
-// UnsafeSTTServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to STTServiceServer will
+// UnsafeSttServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SttServiceServer will
 // result in compilation errors.
-type UnsafeSTTServiceServer interface {
-	mustEmbedUnimplementedSTTServiceServer()
+type UnsafeSttServiceServer interface {
+	mustEmbedUnimplementedSttServiceServer()
 }
 
-func RegisterSTTServiceServer(s grpc.ServiceRegistrar, srv STTServiceServer) {
-	s.RegisterService(&STTService_ServiceDesc, srv)
+func RegisterSttServiceServer(s grpc.ServiceRegistrar, srv SttServiceServer) {
+	s.RegisterService(&SttService_ServiceDesc, srv)
 }
 
-func _STTService_TranscribeAudio_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _SttService_TranscribeAudio_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(Audio)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(STTServiceServer).TranscribeAudio(m, &sTTServiceTranscribeAudioServer{stream})
+	return srv.(SttServiceServer).TranscribeAudio(m, &sttServiceTranscribeAudioServer{stream})
 }
 
-type STTService_TranscribeAudioServer interface {
-	Send(*Text) error
+type SttService_TranscribeAudioServer interface {
+	Send(*Status) error
 	grpc.ServerStream
 }
 
-type sTTServiceTranscribeAudioServer struct {
+type sttServiceTranscribeAudioServer struct {
 	grpc.ServerStream
 }
 
-func (x *sTTServiceTranscribeAudioServer) Send(m *Text) error {
+func (x *sttServiceTranscribeAudioServer) Send(m *Status) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// STTService_ServiceDesc is the grpc.ServiceDesc for STTService service.
+func _SttService_GetHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(User)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SttServiceServer).GetHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SttService_GetHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SttServiceServer).GetHistory(ctx, req.(*User))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SttService_ServiceDesc is the grpc.ServiceDesc for SttService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var STTService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "stt.service.v1.STTService",
-	HandlerType: (*STTServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+var SttService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "stt.service.v1.SttService",
+	HandlerType: (*SttServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetHistory",
+			Handler:    _SttService_GetHistory_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "TranscribeAudio",
-			Handler:       _STTService_TranscribeAudio_Handler,
+			Handler:       _SttService_TranscribeAudio_Handler,
 			ServerStreams: true,
 		},
 	},
