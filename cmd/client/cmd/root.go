@@ -1,27 +1,30 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
+// TODO
+// Add JSON configuration support
+type Configuratoin struct {
+	ServerAddress string `json:"server_address"`
+	FilePath      string
+}
 
+var cfg Configuratoin
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "client",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Speech-to-text client",
+	Long: `Speech-to-text client allows to transcribe audio files to text
+			via remote NN service`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -33,6 +36,12 @@ func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
+	}
+
+	// sample request
+	err = SendRequest()
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
@@ -46,6 +55,16 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVarP(
+		&cfg.ServerAddress,
+		"server_address",
+		"a",
+		"localhost:8282",
+		"Server address")
+	rootCmd.PersistentFlags().StringVarP(
+		&cfg.FilePath,
+		"filepath",
+		"f",
+		"/tmp/stt/audio.wav",
+		"Path to file to process")
 }
-
-
