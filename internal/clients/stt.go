@@ -20,6 +20,9 @@ type options struct {
 // STT config
 var cfg = options{}
 
+// Transcibed text
+var text string
+
 // temporary logger
 var logEntry = middleware.DefaultLogFormatter{Logger: log.New(os.Stdout, "", log.LstdFlags)}
 
@@ -29,19 +32,17 @@ func ConfigureSTT(a string, t time.Duration) {
 }
 
 // Request STT for transcribtion
-func ReqSTT(filepath string) error {
-	var wavFileBytes []byte
+func ReqSTT(wavFileBytes []byte) (string, error) {
+	// Init htttp client to connect to STT server
+	// To Do
+	// Move to init()
 	client := resty.New()
 	client.RetryMaxWaitTime = time.Second * 1
 	client.RetryCount = 5
 
-	// read file
-	wavFileBytes, err := os.ReadFile(filepath)
-	if err != nil {
-		return err
-	}
-
 	// Build connection string for STT app
+	// TO DO
+	// Move to init()
 	reqAddress := fmt.Sprintf("%s/stt", cfg.Address)
 
 	// Create lambda to use it in backoff.Retry()
@@ -55,11 +56,12 @@ func ReqSTT(filepath string) error {
 			return err
 		}
 
-		fmt.Printf("resp code: %v; resp body: %v; Addr: %s\n", resp.StatusCode(), resp, reqAddress)
+		// fmt.Printf("resp code: %v; resp body: %v; Addr: %s\n", resp.StatusCode(), resp, reqAddress)
 
 		switch resp.StatusCode() {
 		case 200:
-			fmt.Println(string(resp.Body()))
+			// fmt.Println(string(resp.Body()))
+			text = resp.String()
 		// Server error
 		case 500:
 			fmt.Println(string(resp.Body()))
@@ -73,12 +75,12 @@ func ReqSTT(filepath string) error {
 	// Use backoff package to implement retryer with increasing interval between attempts
 	b := backoff.NewExponentialBackOff()
 	b.MaxInterval = cfg.Timeout
-	err = backoff.Retry(f, b)
+	err := backoff.Retry(f, b)
 	if err != nil {
 		logEntry.Logger.Print(fmt.Errorf("ReqSTT error: %w", err))
-		return err
+		return text, err
 	}
 
-	return nil
+	return text, nil
 
 }
