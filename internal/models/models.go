@@ -20,9 +20,9 @@ type User struct {
 
 // Store for audio files
 type Store interface {
-	Configure() error
-	Save() error
-	Delete() error
+	Configure(string) error
+	Save(string, []byte) error
+	Delete(string) error
 }
 
 // Structure to provide username throuh context to handlers
