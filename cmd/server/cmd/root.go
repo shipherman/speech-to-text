@@ -52,6 +52,7 @@ func Execute() {
 		Handler: routes.Router,
 	}
 
+	// Listener configuration for gRPC connection
 	tcpListen, err := net.Listen("tcp", ":8282")
 	if err != nil {
 		log.Fatal(err)
@@ -60,7 +61,7 @@ func Execute() {
 
 	sttservice.RegisterSttServiceServer(grpcServer, &TranscribeServer{})
 
-	// Run server
+	// Run http and grpc server
 	for {
 		log.Fatal(grpcServer.Serve(tcpListen))
 		log.Fatal(server.ListenAndServe())
