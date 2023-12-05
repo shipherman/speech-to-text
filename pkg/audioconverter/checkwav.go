@@ -1,4 +1,4 @@
-package audioconvertor
+package audioconverter
 
 import "fmt"
 
