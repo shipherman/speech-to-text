@@ -60,7 +60,7 @@ func init() {
 		"server_address",
 		"a",
 		"localhost:8282",
-		"Server address")
+		"STT server address")
 	rootCmd.PersistentFlags().StringVarP(
 		&cfg.FilePath,
 		"filepath",
