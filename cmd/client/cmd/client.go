@@ -7,6 +7,7 @@ import (
 	"os"
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
+	"github.com/shipherman/speech-to-text/pkg/audioconvertor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -20,7 +21,13 @@ func SendRequest() error {
 		return err
 	}
 
+	// sample audio load
+	// and check if it has appropriate headers
 	audio.Audio = readAudioFromFile()
+	_, err = audioconvertor.CheckWAVHeader(audio.Audio)
+	if err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 	client := sttservice.NewSttServiceClient(conn)
