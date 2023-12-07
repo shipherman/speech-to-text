@@ -11,6 +11,10 @@ type FSStore struct {
 	Path string
 }
 
+func NewFSStore() *FSStore {
+	return &FSStore{}
+}
+
 func (f *FSStore) Configure(path string) error {
 	f.Path = path
 	return nil
