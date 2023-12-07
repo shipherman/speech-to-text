@@ -12,13 +12,13 @@ type Audio struct {
 }
 
 type User struct {
-	ID      int32
-	Email   string
-	Name    string
-	Surname string
+	ID    int32
+	Email string
+	Name  string
 }
 
 // Store for audio files
+// Move to separate package?
 type Store interface {
 	Configure(string) error
 	Save(string, []byte) error

@@ -21,6 +21,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	SttService_Register_FullMethodName        = "/stt.service.v1.SttService/Register"
+	SttService_Login_FullMethodName           = "/stt.service.v1.SttService/Login"
 	SttService_TranscribeAudio_FullMethodName = "/stt.service.v1.SttService/TranscribeAudio"
 	SttService_GetHistory_FullMethodName      = "/stt.service.v1.SttService/GetHistory"
 )
@@ -29,6 +31,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SttServiceClient interface {
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (SttService_TranscribeAudioClient, error)
 	GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error)
 }
@@ -39,6 +43,24 @@ type sttServiceClient struct {
 
 func NewSttServiceClient(cc grpc.ClientConnInterface) SttServiceClient {
 	return &sttServiceClient{cc}
+}
+
+func (c *sttServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, SttService_Register_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sttServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, SttService_Login_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *sttServiceClient) TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (SttService_TranscribeAudioClient, error) {
@@ -86,6 +108,8 @@ func (c *sttServiceClient) GetHistory(ctx context.Context, in *User, opts ...grp
 // All implementations must embed UnimplementedSttServiceServer
 // for forward compatibility
 type SttServiceServer interface {
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error
 	GetHistory(context.Context, *User) (*History, error)
 	mustEmbedUnimplementedSttServiceServer()
@@ -95,6 +119,12 @@ type SttServiceServer interface {
 type UnimplementedSttServiceServer struct {
 }
 
+func (UnimplementedSttServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+}
+func (UnimplementedSttServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
 func (UnimplementedSttServiceServer) TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error {
 	return status.Errorf(codes.Unimplemented, "method TranscribeAudio not implemented")
 }
@@ -112,6 +142,42 @@ type UnsafeSttServiceServer interface {
 
 func RegisterSttServiceServer(s grpc.ServiceRegistrar, srv SttServiceServer) {
 	s.RegisterService(&SttService_ServiceDesc, srv)
+}
+
+func _SttService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SttServiceServer).Register(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SttService_Register_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SttServiceServer).Register(ctx, req.(*RegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SttService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SttServiceServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SttService_Login_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SttServiceServer).Login(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _SttService_TranscribeAudio_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -160,6 +226,14 @@ var SttService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "stt.service.v1.SttService",
 	HandlerType: (*SttServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Register",
+			Handler:    _SttService_Register_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _SttService_Login_Handler,
+		},
 		{
 			MethodName: "GetHistory",
 			Handler:    _SttService_GetHistory_Handler,
