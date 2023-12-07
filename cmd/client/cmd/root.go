@@ -65,6 +65,6 @@ func init() {
 		&cfg.FilePath,
 		"filepath",
 		"f",
-		"/tmp/stt/audio.wav",
+		"/tmp/stt/sample-audio.wav",
 		"Path to file to process")
 }
