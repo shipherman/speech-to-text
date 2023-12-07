@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.15.8
-// source: stt/service/v1/service.proto
+// source: stt/service/v1/stt.proto
 
 // Additional imports go here
 
@@ -172,5 +172,5 @@ var SttService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "stt/service/v1/service.proto",
+	Metadata: "stt/service/v1/stt.proto",
 }
