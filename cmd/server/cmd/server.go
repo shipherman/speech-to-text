@@ -8,12 +8,16 @@ import (
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
+	"github.com/shipherman/speech-to-text/internal/db"
 	"github.com/shipherman/speech-to-text/pkg/audioconverter"
 	"github.com/shipherman/speech-to-text/pkg/fsstore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type TranscribeServer struct {
 	sttservice.UnimplementedSttServiceServer
+	DBClient db.Connector
 }
 
 var LocStore *fsstore.FSStore
@@ -79,4 +83,41 @@ func (t *TranscribeServer) TranscribeAudio(
 func (t *TranscribeServer) GetHistory(ctx context.Context, in *sttservice.User) (*sttservice.History, error) {
 
 	return nil, nil
+}
+
+// Register registers new user in stt service
+func (t *TranscribeServer) Register(ctx context.Context, in *sttservice.RegisterRequest) (*sttservice.RegisterResponse, error) {
+	if in.Email == "" {
+		return nil, status.Error(codes.InvalidArgument, "email is required")
+	}
+
+	if in.Password == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	// Save user to DB
+	err := t.DBClient.CreateUser(ctx,
+		in.GetUsername(),
+		in.GetEmail(),
+		in.GetPassword())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &sttservice.RegisterResponse{}, nil
+}
+
+func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginRequest) (*sttservice.LoginResponse, error) {
+	if in.Email == "" {
+		return nil, status.Error(codes.InvalidArgument, "email is required")
+	}
+
+	if in.Password == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	err := t.DBClient.Login(ctx, in.GetEmail(), in.GetPassword())
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to login")
+	}
+	return &sttservice.LoginResponse{}, nil
 }
