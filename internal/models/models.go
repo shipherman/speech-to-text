@@ -12,9 +12,10 @@ type Audio struct {
 }
 
 type User struct {
-	ID    int32
-	Email string
-	Name  string
+	ID       int32
+	Email    string
+	Name     string
+	Password string
 }
 
 // Store for audio files
