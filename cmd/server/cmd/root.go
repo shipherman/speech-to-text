@@ -11,13 +11,24 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/shipherman/speech-to-text/gen/ent"
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
+	"github.com/shipherman/speech-to-text/internal/db"
 	"github.com/shipherman/speech-to-text/internal/transport/routes"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
+
+type Config struct {
+	ServerAddress string
+	DSN           string
+	STTAddress    string
+}
+
+var cfg Config
+var DBConn db.Connector
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -53,13 +64,22 @@ func Execute() {
 	}
 
 	// Listener configuration for gRPC connection
-	tcpListen, err := net.Listen("tcp", ":8282")
+	tcpListen, err := net.Listen("tcp", cfg.ServerAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 	grpcServer := grpc.NewServer()
 
-	sttservice.RegisterSttServiceServer(grpcServer, &TranscribeServer{})
+	// Init connection to DB
+	// Fatal on error
+	client, err := ent.Open("postgres", cfg.DSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Register STT Server with Transcribe server instance
+	sttservice.RegisterSttServiceServer(grpcServer,
+		&TranscribeServer{DBClient: db.Connector{Client: client}})
 
 	// Run http and grpc server
 	for {
@@ -78,4 +98,28 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().
+		StringVarP(&cfg.ServerAddress,
+			"server-address",
+			"a",
+			"localhost:8282",
+			"GRPC server address to run")
+	rootCmd.PersistentFlags().
+		StringVarP(&cfg.STTAddress,
+			"stt-address",
+			"s",
+			"localhost:9090",
+			"Address to connect to Speech-to-text neural network service")
+	rootCmd.PersistentFlags().
+		StringVarP(&cfg.DSN,
+			"dsn",
+			"d",
+			"host=127.0.0.1 port=5432 user=postgres password=pass dbname=postgres sslmode=disable",
+			"Postgres Database connection string")
+
+	// Configure db schema
+	err := db.ConfigureSchema(cfg.DSN)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
