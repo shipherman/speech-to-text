@@ -11,10 +11,12 @@ type FSStore struct {
 	Path string
 }
 
-func NewFSStore() *FSStore {
-	return &FSStore{}
+// NewFSStore creates an instance of FSStore
+func NewFSStore(path string) *FSStore {
+	return &FSStore{Path: path}
 }
 
+// Configure changes path to local store
 func (f *FSStore) Configure(path string) error {
 	f.Path = path
 	return nil
@@ -34,6 +36,10 @@ func (f *FSStore) Save(name string, data []byte) error {
 	return nil
 }
 
-func (f *FSStore) Delete(name string) error {
-	return nil
+func (f *FSStore) Get(name string) ([]byte, error) {
+	return nil, nil
+}
+
+func (f *FSStore) GetStorePath() string {
+	return f.Path
 }
