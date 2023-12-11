@@ -18,12 +18,11 @@ type User struct {
 	Password string
 }
 
-// Store for audio files
-// Move to separate package?
+// Store interfase for audio files
 type Store interface {
-	Configure(string) error
 	Save(string, []byte) error
-	Delete(string) error
+	Get(string) ([]byte, error)
+	GetStorePath() string
 }
 
 // Structure to provide username throuh context to handlers
