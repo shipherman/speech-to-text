@@ -1,12 +1,21 @@
 package db
 
 import (
+	"context"
+
 	"github.com/shipherman/speech-to-text/gen/ent"
 )
 
-func Save(a ent.Audio, u ent.User) error {
-	// h := sha256.New()
-	// _, err := hashAudio.Write(a.)
-	// audioHash := h.Sum(nil)
-	return nil
+func (c *Connector) SaveNewAudio(a ent.Audio, u *ent.User) (*ent.Audio, error) {
+	entAudio, err := c.Client.Audio.Create().
+		SetHash(a.Hash).
+		SetUser(u).
+		SetPath(a.Path).
+		Save(context.Background())
+
+	if err != nil {
+		return entAudio, err
+	}
+
+	return entAudio, err
 }
