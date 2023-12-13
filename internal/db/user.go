@@ -11,7 +11,7 @@ type Connector struct {
 	*ent.Client
 }
 
-// CreateUser adds new user to DB
+// SaveUser adds new user to DB
 func (c *Connector) SaveUser(ctx context.Context,
 	username string,
 	email string,
