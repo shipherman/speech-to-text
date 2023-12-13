@@ -6,7 +6,6 @@ package cmd
 import (
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/shipherman/speech-to-text/internal/db"
 	"github.com/shipherman/speech-to-text/internal/services/auth"
-	"github.com/shipherman/speech-to-text/internal/transport/routes"
 	"github.com/shipherman/speech-to-text/pkg/fsstore"
 
 	"github.com/spf13/cobra"
@@ -58,11 +56,11 @@ func Execute() {
 	// STT
 	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
 
-	// Server configuration
-	server := http.Server{
-		Addr:    "127.0.0.1:8080",
-		Handler: routes.Router,
-	}
+	// Server http configuration
+	// server := http.Server{
+	// 	Addr:    "127.0.0.1:8080",
+	// 	Handler: routes.Router,
+	// }
 
 	// Listener configuration for gRPC connection
 	tcpListen, err := net.Listen("tcp", cfg.ServerAddress)
@@ -89,7 +87,7 @@ func Execute() {
 	servAuth.Secret = cfg.Secret
 
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(
+		grpc.ChainUnaryInterceptor(
 			auth.AuthInterceptor,
 		),
 	}
@@ -104,7 +102,7 @@ func Execute() {
 	// Run http and grpc server
 	for {
 		log.Fatal(grpcServer.Serve(tcpListen))
-		log.Fatal(server.ListenAndServe())
+		// log.Fatal(server.ListenAndServe())
 	}
 }
 
