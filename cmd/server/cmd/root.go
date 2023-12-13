@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -15,7 +16,9 @@ import (
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/shipherman/speech-to-text/internal/db"
+	"github.com/shipherman/speech-to-text/internal/services/auth"
 	"github.com/shipherman/speech-to-text/internal/transport/routes"
+	"github.com/shipherman/speech-to-text/pkg/fsstore"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -25,10 +28,13 @@ type Config struct {
 	ServerAddress string
 	DSN           string
 	STTAddress    string
+	StorePath     string
+	Secret        string
 }
 
 var cfg Config
 var DBConn db.Connector
+var programLevel = new(slog.LevelVar)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -52,11 +58,6 @@ func Execute() {
 	// STT
 	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
 
-	// err = clients.ReqSTT("/home/tas/Downloads/sample.wav")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
 	// Server configuration
 	server := http.Server{
 		Addr:    "127.0.0.1:8080",
@@ -68,7 +69,6 @@ func Execute() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	grpcServer := grpc.NewServer()
 
 	// Init connection to DB
 	// Fatal on error
@@ -76,10 +76,30 @@ func Execute() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// Init db connector
+	dbclient := db.Connector{Client: client}
+
+	// Init blob store
+	fsstore := fsstore.NewFSStore(cfg.StorePath)
+
+	// Auth interceptor initiation
+	// h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
+	// slogger := slog.New(h)
+	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3)
+	servAuth.Secret = cfg.Secret
+
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(
+			auth.AuthInterceptor,
+		),
+	}
+	grpcServer := grpc.NewServer(opts...)
 
 	// Register STT Server with Transcribe server instance
 	sttservice.RegisterSttServiceServer(grpcServer,
-		&TranscribeServer{DBClient: db.Connector{Client: client}})
+		&TranscribeServer{DBClient: dbclient,
+			auth:  *servAuth,
+			Store: fsstore})
 
 	// Run http and grpc server
 	for {
@@ -116,6 +136,12 @@ func init() {
 			"d",
 			"host=127.0.0.1 port=5432 user=postgres password=pass dbname=postgres sslmode=disable",
 			"Postgres Database connection string")
+	rootCmd.PersistentFlags().
+		StringVarP(&cfg.StorePath,
+			"store-path",
+			"p",
+			"/tmp/stt/store",
+			"Path to local blob storage")
 
 	// Configure db schema
 	err := db.ConfigureSchema(cfg.DSN)
