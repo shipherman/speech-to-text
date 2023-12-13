@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"log"
-	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -34,7 +33,8 @@ type Config struct {
 
 var cfg Config
 var DBConn db.Connector
-var programLevel = new(slog.LevelVar)
+
+// var programLevel = new(slog.LevelVar)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
