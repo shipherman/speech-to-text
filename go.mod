@@ -5,9 +5,13 @@ go 1.21.3
 require (
 	entgo.io/ent v0.12.5
 	github.com/cenkalti/backoff/v4 v4.2.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-resty/resty/v2 v2.10.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645
 	github.com/lib/pq v1.10.9
 	github.com/spf13/cobra v1.8.0
 	google.golang.org/grpc v1.59.0
@@ -25,6 +29,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
+	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
