@@ -9,6 +9,8 @@ import (
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/shipherman/speech-to-text/internal/db"
+	"github.com/shipherman/speech-to-text/internal/models"
+	"github.com/shipherman/speech-to-text/internal/services/auth"
 	"github.com/shipherman/speech-to-text/pkg/audioconverter"
 	"github.com/shipherman/speech-to-text/pkg/fsstore"
 	"google.golang.org/grpc/codes"
@@ -18,6 +20,8 @@ import (
 type TranscribeServer struct {
 	sttservice.UnimplementedSttServiceServer
 	DBClient db.Connector
+	Store    models.Store
+	auth     auth.Auth
 }
 
 var LocStore *fsstore.FSStore
@@ -58,12 +62,16 @@ func (t *TranscribeServer) TranscribeAudio(
 	// Use hex string as filename
 	audioFileHashSum := hex.EncodeToString(h.Sum(nil))
 
+	// Execute user frome context
 	// Save data to DB
 
+	// t.DBClient.SaveNewAudio(audioFileHashSum, t.Store, )
+
 	// Save audio to store
-	LocStore = fsstore.NewFSStore()
-	LocStore.Configure("/tmp/stt/store")
-	LocStore.Save(string(audioFileHashSum), audio.Audio)
+	err = t.Store.Save(string(audioFileHashSum), audio.Audio)
+	if err != nil {
+		return err
+	}
 
 	// Call remote STT neural network service
 	text, err := clients.ReqSTT(audio.Audio)
@@ -86,7 +94,9 @@ func (t *TranscribeServer) GetHistory(ctx context.Context, in *sttservice.User) 
 }
 
 // Register registers new user in stt service
-func (t *TranscribeServer) Register(ctx context.Context, in *sttservice.RegisterRequest) (*sttservice.RegisterResponse, error) {
+func (t *TranscribeServer) Register(ctx context.Context,
+	in *sttservice.RegisterRequest,
+) (*sttservice.RegisterResponse, error) {
 	if in.Email == "" {
 		return nil, status.Error(codes.InvalidArgument, "email is required")
 	}
@@ -95,15 +105,15 @@ func (t *TranscribeServer) Register(ctx context.Context, in *sttservice.Register
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	// Save user to DB
-	err := t.DBClient.CreateUser(ctx,
-		in.GetUsername(),
-		in.GetEmail(),
-		in.GetPassword())
+	userID, err := t.auth.RegisterNewUser(ctx, in.Username, in.Email, in.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	return &sttservice.RegisterResponse{}, nil
+	return &sttservice.RegisterResponse{UserId: userID}, nil
 }
 
 func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginRequest) (*sttservice.LoginResponse, error) {
@@ -115,9 +125,9 @@ func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginReques
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	err := t.DBClient.Login(ctx, in.GetEmail(), in.GetPassword())
+	token, err := t.auth.Login(ctx, in.GetEmail(), in.GetPassword())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to login")
 	}
-	return &sttservice.LoginResponse{}, nil
+	return &sttservice.LoginResponse{Token: token}, nil
 }
