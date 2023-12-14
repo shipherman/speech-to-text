@@ -23,8 +23,7 @@ var cfg Configuratoin
 var rootCmd = &cobra.Command{
 	Use:   "client",
 	Short: "Speech-to-text client",
-	Long: `Speech-to-text client allows to transcribe audio files to text
-			via remote NN service`,
+	Long:  `Speech-to-text client allows to transcribe audio files to text via remote NN service`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

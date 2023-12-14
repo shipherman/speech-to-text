@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"crypto/tls"
 	"log"
 	"net"
 	"os"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type Config struct {
@@ -86,10 +88,17 @@ func Execute() {
 	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3)
 	servAuth.Secret = cfg.Secret
 
+	// Load server certificate
+	cert, err := tls.LoadX509KeyPair("./cert/server_cert.pem", "./cert/server_key.pem")
+	if err != nil {
+		log.Fatalf("failed to load key pair: %s", err)
+	}
+
+	// Define gRPC server options
+	// Authenticator + ATLS creds
 	opts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			auth.AuthInterceptor,
-		),
+		grpc.UnaryInterceptor(auth.AuthInterceptor),
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 	}
 	grpcServer := grpc.NewServer(opts...)
 

@@ -12,7 +12,6 @@ import (
 	"github.com/shipherman/speech-to-text/internal/models"
 	"github.com/shipherman/speech-to-text/internal/services/auth"
 	"github.com/shipherman/speech-to-text/pkg/audioconverter"
-	"github.com/shipherman/speech-to-text/pkg/fsstore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -24,8 +23,9 @@ type TranscribeServer struct {
 	auth     auth.Auth
 }
 
-var LocStore *fsstore.FSStore
-
+// TranscribeAudio provides main functionality of service
+// It adds new audio to the pipeline, sends processing statuses to client
+// and provides result of transcription to client
 func (t *TranscribeServer) TranscribeAudio(
 	audio *sttservice.Audio,
 	stream sttservice.SttService_TranscribeAudioServer,
@@ -62,7 +62,9 @@ func (t *TranscribeServer) TranscribeAudio(
 	// Use hex string as filename
 	audioFileHashSum := hex.EncodeToString(h.Sum(nil))
 
-	// Execute user frome context
+	// Execute user email frome jwt
+	// get User object from db
+
 	// Save data to DB
 
 	// t.DBClient.SaveNewAudio(audioFileHashSum, t.Store, )
@@ -116,6 +118,7 @@ func (t *TranscribeServer) Register(ctx context.Context,
 	return &sttservice.RegisterResponse{UserId: userID}, nil
 }
 
+// Login authenticate users
 func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginRequest) (*sttservice.LoginResponse, error) {
 	if in.Email == "" {
 		return nil, status.Error(codes.InvalidArgument, "email is required")
@@ -125,6 +128,7 @@ func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginReques
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
+	fmt.Println("TServer Login")
 	token, err := t.auth.Login(ctx, in.GetEmail(), in.GetPassword())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to login")
