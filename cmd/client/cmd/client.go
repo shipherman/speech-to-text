@@ -54,7 +54,20 @@ func SendRequest() error {
 	if err != nil {
 		return err
 	}
+	// respReg, err := client.Register(ctx, &sttservice.RegisterRequest{
+	// 	Username: "u1",
+	// 	Email:    "e1",
+	// 	Password: "p1"})
+	// fmt.Println(respReg.UserId, err)
 
+	// fmt.Println("Logiing in")
+	// respLog, err := client.Login(ctx, &sttservice.LoginRequest{
+	// 	Email:    "e1",
+	// 	Password: "p1"})
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Println(respLog.Token, err)
 	// TODO
 	// Implement switch case structure for all known statuses
 	for {
@@ -78,6 +91,6 @@ func readAudioFromFile() []byte {
 
 func fetchToken() *oauth2.Token {
 	return &oauth2.Token{
-		AccessToken: "some-secret-token",
+		AccessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImUxIiwiZXhwIjoxNzAyNTczMDk0LCJ1aWQiOjF9.53UFl-2m3MsPj4gmZsE_bpMYeDRiWnbNQ9rFX8k7_v8",
 	}
 }

@@ -97,7 +97,7 @@ func Execute() {
 	// Define gRPC server options
 	// Authenticator + ATLS creds
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(auth.AuthInterceptor),
+		grpc.ChainUnaryInterceptor(auth.AuthUnaryInterceptor),
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 	}
 	grpcServer := grpc.NewServer(opts...)

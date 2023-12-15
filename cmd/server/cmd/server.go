@@ -66,7 +66,7 @@ func (t *TranscribeServer) TranscribeAudio(
 	// get User object from db
 
 	// Save data to DB
-
+	// email, err := t.auth.GetEmail(d())
 	// t.DBClient.SaveNewAudio(audioFileHashSum, t.Store, )
 
 	// Save audio to store
@@ -90,8 +90,10 @@ func (t *TranscribeServer) TranscribeAudio(
 	return nil
 }
 
-func (t *TranscribeServer) GetHistory(ctx context.Context, in *sttservice.User) (*sttservice.History, error) {
-
+func (t *TranscribeServer) GetHistory(ctx context.Context,
+	in *sttservice.User,
+) (*sttservice.History, error) {
+	// t.DBClient.GetHistory()
 	return nil, nil
 }
 

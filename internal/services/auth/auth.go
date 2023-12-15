@@ -46,6 +46,14 @@ type UserProvider interface {
 	GetUser(ctx context.Context, email string) (*ent.User, error)
 }
 
+// Claims defines the struct containing the token claims.
+type Claims struct {
+	dgjwt.StandardClaims
+
+	// Username defines the identity of the user.
+	Email string `json:"email"`
+}
+
 func New(
 	// log *slog.Logger,
 	userSaver UserSaver,
@@ -95,6 +103,10 @@ func (a *Auth) Login(
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
+	s, _ := a.GetEmail(context.Background(), token)
+
+	fmt.Println(s)
+
 	return token, nil
 }
 
@@ -124,54 +136,75 @@ func (a *Auth) RegisterNewUser(ctx context.Context,
 	return id, nil
 }
 
+func (a *Auth) GetEmail(ctx context.Context,
+	tokenString string,
+) (string, error) {
+	claims := &Claims{}
+
+	token, err := dgjwt.ParseWithClaims(tokenString, claims, func(t *dgjwt.Token) (interface{}, error) {
+		return []byte(a.Secret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if !token.Valid {
+		return claims.Email, fmt.Errorf("invalid token")
+	}
+
+	return claims.Email, nil
+}
+
 // AuthInterceptor provides auth for api
-func AuthInterceptor(ctx context.Context,
+func AuthUnaryInterceptor(ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	fmt.Println("checking auth")
-	userName := CheckAuth(ctx)
-	log.Printf("gRPC method: %s, %v", info.FullMethod, req)
-	newCtx := ctx
-	if len(userName) > 0 {
-		newCtx = context.WithValue(ctx, "username", userName)
-		log.Println(newCtx.Value("username"))
+	email, err := CheckAuth(ctx)
+	if err != nil {
+		return nil, err
 	}
+
+	log.Printf("gRPC method: %s, %v", info.FullMethod, req)
+
+	newCtx := ctx
+
+	if len(email) > 0 {
+		newCtx = context.WithValue(ctx, "email", email)
+		log.Println(newCtx.Value("email"))
+	}
+
 	return handler(newCtx, req)
 }
 
-// Claims defines the struct containing the token claims.
-type Claims struct {
-	dgjwt.StandardClaims
-
-	// Username defines the identity of the user.
-	Username string `json:"username"`
-}
-
-func CheckAuth(ctx context.Context) (username string) {
+// CheckAuth validates user token.
+// Return error on invalid token
+func CheckAuth(ctx context.Context) (email string, err error) {
 	tokenStr := getTokenFromContext(ctx)
 	if len(tokenStr) == 0 {
-		return ""
+		return "", fmt.Errorf("empty user token")
 	}
 
+	// Define claims to parse user token
 	var clientClaims Claims
 
 	token, err := dgjwt.ParseWithClaims(tokenStr, &clientClaims, func(token *dgjwt.Token) (interface{}, error) {
 		if token.Header["alg"] != "HS256" {
-			fmt.Println("ErrInvalidAlgorithm")
+			return nil, fmt.Errorf("ErrInvalidAlgorithm")
 		}
-		return []byte("verysecret"), nil
+		return token, nil
 	})
 	if err != nil {
-		fmt.Println("jwt parse error")
+		return "", fmt.Errorf("jwt parse error")
 	}
 
 	if !token.Valid {
 		fmt.Println("ErrInvalidToken")
 	}
 
-	return clientClaims.Username
+	return clientClaims.Email, nil
 }
 
 func getTokenFromContext(ctx context.Context) string {
