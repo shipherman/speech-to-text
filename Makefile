@@ -21,3 +21,11 @@ run-stt-docker:
 	docker run --rm -it --name ds \
 	-v /home/tas/Documents/GoLang/YPracticum/coqui-ai-assets:/opt/deepspeech \
 	-p 0.0.0.0:9090:9090 dss:latest
+
+# Generate mocks
+MOCKS_DESTINATION=mock
+.PHONY: mocks
+mocks: internal/db/*.go
+	@echo "Generating mocks for db package..."
+	@rm -rf $(MOCKS_DESTINATION)
+	@for file in $^; do mockgen -source=$$file -destination=$(MOCKS_DESTINATION)/db_mocks.go -package=mock; done

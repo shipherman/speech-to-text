@@ -9,32 +9,44 @@ import (
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/pkg/audioconverter"
-	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/oauth"
 )
+
+type tokenAuth struct {
+	token string
+}
+
+func (a *tokenAuth) GetRequestMetadata(ctx context.Context,
+	uri ...string) (map[string]string, error) {
+	return map[string]string{"authorization": a.token, "alg": "HS256"}, nil
+}
+
+func (a *tokenAuth) RequireTransportSecurity() bool {
+	return true
+}
 
 // Send request to server
 // Recieve statuses till Done
 func SendRequest() error {
 	var audio sttservice.Audio
-	perRPC := oauth.TokenSource{TokenSource: oauth2.StaticTokenSource(fetchToken())}
+	// perRPC := fetchToken()
 	creds, err := credentials.NewClientTLSFromFile("./cert/ca_cert.pem", "x.test.example.com")
 	if err != nil {
 		log.Fatalf("failed to load credentials: %v", err)
 	}
-	opts := []grpc.DialOption{
-		// In addition to the following grpc.DialOption, callers may also use
-		// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
-		// itself.
-		// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
-		grpc.WithPerRPCCredentials(perRPC),
-		// oauth.TokenSource requires the configuration of transport
-		// credentials.
+	// opts := []grpc.DialOption{
+	// In addition to the following grpc.DialOption, callers may also use
+	// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
+	// itself.
+	// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
+	// oauth.TokenSource requires the configuration of transport
+	// credentials.
+	// }
+	conn, err := grpc.DialContext(context.Background(), cfg.ServerAddress,
+		grpc.WithPerRPCCredentials(fetchToken()),
 		grpc.WithTransportCredentials(creds),
-	}
-	conn, err := grpc.Dial(cfg.ServerAddress, opts...)
+	)
 	if err != nil {
 		return err
 	}
@@ -89,8 +101,8 @@ func readAudioFromFile() []byte {
 	return audioBytes
 }
 
-func fetchToken() *oauth2.Token {
-	return &oauth2.Token{
-		AccessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImUxIiwiZXhwIjoxNzAyNTczMDk0LCJ1aWQiOjF9.53UFl-2m3MsPj4gmZsE_bpMYeDRiWnbNQ9rFX8k7_v8",
+func fetchToken() *tokenAuth {
+	return &tokenAuth{
+		token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImUxIiwiZXhwIjoxNzAyODUzNDgwLCJ1aWQiOjF9.Yabm0qlMDM3rptOR4oTLctKlrMd9fN4YO7qzSdBhzOk",
 	}
 }

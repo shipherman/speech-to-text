@@ -15,8 +15,12 @@ import (
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/shipherman/speech-to-text/internal/db"
+	"github.com/shipherman/speech-to-text/internal/logger"
 	"github.com/shipherman/speech-to-text/internal/services/auth"
 	"github.com/shipherman/speech-to-text/pkg/fsstore"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -97,7 +101,9 @@ func Execute() {
 	// Define gRPC server options
 	// Authenticator + ATLS creds
 	opts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(auth.AuthUnaryInterceptor),
+		// grpc.ChainUnaryInterceptor(auth.AuthUnaryInterceptor),
+		grpc.ChainStreamInterceptor(auth.AuthStreamInterceptor, grpc_middleware.ChainStreamServer(
+			grpc_zap.StreamServerInterceptor(logger.ZapInterceptor()))),
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 	}
 	grpcServer := grpc.NewServer(opts...)
@@ -149,6 +155,11 @@ func init() {
 			"p",
 			"/tmp/stt/store",
 			"Path to local blob storage")
+	rootCmd.PersistentFlags().
+		StringVar(&cfg.Secret,
+			"secret",
+			"verysecretstring",
+			"Secret string to generete JWT")
 
 	// Configure db schema
 	err := db.ConfigureSchema(cfg.DSN)

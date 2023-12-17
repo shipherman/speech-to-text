@@ -7,12 +7,15 @@ import (
 	"log"
 	"time"
 
-	dgjwt "github.com/dgrijalva/jwt-go"
-	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
+	jwtv5 "github.com/golang-jwt/jwt/v5"
+
 	"github.com/shipherman/speech-to-text/gen/ent"
 	"github.com/shipherman/speech-to-text/internal/jwt"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type Auth struct {
@@ -48,7 +51,7 @@ type UserProvider interface {
 
 // Claims defines the struct containing the token claims.
 type Claims struct {
-	dgjwt.StandardClaims
+	jwtv5.RegisteredClaims
 
 	// Username defines the identity of the user.
 	Email string `json:"email"`
@@ -141,7 +144,7 @@ func (a *Auth) GetEmail(ctx context.Context,
 ) (string, error) {
 	claims := &Claims{}
 
-	token, err := dgjwt.ParseWithClaims(tokenString, claims, func(t *dgjwt.Token) (interface{}, error) {
+	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
 		return []byte(a.Secret), nil
 	})
 	if err != nil {
@@ -156,18 +159,20 @@ func (a *Auth) GetEmail(ctx context.Context,
 }
 
 // AuthInterceptor provides auth for api
-func AuthUnaryInterceptor(ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (interface{}, error) {
-	fmt.Println("checking auth")
+func AuthStreamInterceptor(
+	srv interface{},
+	stream grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler,
+) error {
+	ctx := stream.Context()
+	fmt.Println("stream interceptor auth")
 	email, err := CheckAuth(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	log.Printf("gRPC method: %s, %v", info.FullMethod, req)
+	log.Printf("gRPC method: %s, %v", info.FullMethod, srv)
 
 	newCtx := ctx
 
@@ -176,38 +181,56 @@ func AuthUnaryInterceptor(ctx context.Context,
 		log.Println(newCtx.Value("email"))
 	}
 
-	return handler(newCtx, req)
+	err = handler(srv, stream)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CheckAuth validates user token.
 // Return error on invalid token
 func CheckAuth(ctx context.Context) (email string, err error) {
-	tokenStr := getTokenFromContext(ctx)
-	if len(tokenStr) == 0 {
-		return "", fmt.Errorf("empty user token")
+	claims := &Claims{}
+	tokenString, err := extractHeader(ctx, headerAuthorize)
+	if err != nil {
+		return "", err
 	}
 
-	// Define claims to parse user token
-	var clientClaims Claims
-
-	token, err := dgjwt.ParseWithClaims(tokenStr, &clientClaims, func(token *dgjwt.Token) (interface{}, error) {
-		if token.Header["alg"] != "HS256" {
-			return nil, fmt.Errorf("ErrInvalidAlgorithm")
-		}
-		return token, nil
+	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
+		return []byte("verysecretstring"), nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("jwt parse error")
+		log.Println(err)
+		return "", err
 	}
 
 	if !token.Valid {
-		fmt.Println("ErrInvalidToken")
+		return claims.Email, fmt.Errorf("invalid token")
 	}
 
-	return clientClaims.Email, nil
+	return claims.Email, nil
 }
 
-func getTokenFromContext(ctx context.Context) string {
-	val := metautils.ExtractIncoming(ctx).Get(headerAuthorize)
-	return val
+// func getTokenFromContext(ctx context.Context) string {
+// 	val := metautils.ExtractIncoming(ctx).Get(headerAuthorize)
+// 	return val
+// }
+
+func extractHeader(ctx context.Context, header string) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", status.Error(codes.Unauthenticated, "no headers in request")
+	}
+
+	authHeaders, ok := md[header]
+	if !ok {
+		return "", status.Error(codes.Unauthenticated, "no header in request")
+	}
+
+	if len(authHeaders) != 1 {
+		return "", status.Error(codes.Unauthenticated, "more than 1 header in request")
+	}
+
+	return authHeaders[0], nil
 }
