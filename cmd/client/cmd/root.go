@@ -4,8 +4,8 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -15,6 +15,9 @@ import (
 type Configuratoin struct {
 	ServerAddress string `json:"server_address"`
 	FilePath      string
+	CACert        string
+	AuthToken     string
+	Timeout       time.Duration
 }
 
 var cfg Configuratoin
@@ -37,11 +40,12 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	// sample request
-	err = SendRequest()
-	if err != nil {
-		fmt.Println(err)
-	}
+	// Run request
+	Run()
+	// err = SendRequest()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 }
 
 func init() {
@@ -66,4 +70,16 @@ func init() {
 		"f",
 		"/tmp/stt/ru-Peacock.wav",
 		"Path to file to process")
+	rootCmd.PersistentFlags().StringVarP(
+		&cfg.CACert,
+		"cacert",
+		"ca",
+		"./cert/ca_cert.pem",
+		"Path to CA certificate")
+	rootCmd.PersistentFlags().StringVarP(
+		&cfg.AuthToken,
+		"authtoken",
+		"auth",
+		"",
+		"Authentication token string")
 }

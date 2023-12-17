@@ -13,75 +13,55 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-type tokenAuth struct {
-	token string
+type Client interface {
+	SendRequest(context.Context) error
+	Register(context.Context, string, string, string) (int64, error)
+	Login(context.Context, string, string) (string, error)
 }
 
-func (a *tokenAuth) GetRequestMetadata(ctx context.Context,
-	uri ...string) (map[string]string, error) {
-	return map[string]string{"authorization": a.token, "alg": "HS256"}, nil
+type STTClient struct {
+	sttservice.SttServiceClient
 }
 
-func (a *tokenAuth) RequireTransportSecurity() bool {
-	return true
-}
+var audio sttservice.Audio
 
-// Send request to server
-// Recieve statuses till Done
-func SendRequest() error {
-	var audio sttservice.Audio
-	// perRPC := fetchToken()
-	creds, err := credentials.NewClientTLSFromFile("./cert/ca_cert.pem", "x.test.example.com")
+func NewClient() (Client, error) {
+	var client STTClient
+	creds, err := credentials.NewClientTLSFromFile(cfg.CACert, "")
 	if err != nil {
 		log.Fatalf("failed to load credentials: %v", err)
 	}
-	// opts := []grpc.DialOption{
-	// In addition to the following grpc.DialOption, callers may also use
-	// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
-	// itself.
-	// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
-	// oauth.TokenSource requires the configuration of transport
-	// credentials.
-	// }
 	conn, err := grpc.DialContext(context.Background(), cfg.ServerAddress,
 		grpc.WithPerRPCCredentials(fetchToken()),
 		grpc.WithTransportCredentials(creds),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	client.SttServiceClient = sttservice.NewSttServiceClient(conn)
+
+	return &client, err
+}
+
+// Send request to server
+// Recieve statuses till Done
+func (c *STTClient) SendRequest(ctx context.Context) error {
+	// perRPC := fetchToken()
 
 	// sample audio load
 	// and check if it has appropriate headers
 	audio.Audio = readAudioFromFile()
-	_, err = audioconverter.CheckWAVHeader(audio.Audio)
+	_, err := audioconverter.CheckWAVHeader(audio.Audio)
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
-	client := sttservice.NewSttServiceClient(conn)
-
-	stream, err := client.TranscribeAudio(ctx, &audio)
+	stream, err := c.TranscribeAudio(ctx, &audio)
 	if err != nil {
 		return err
 	}
-	// respReg, err := client.Register(ctx, &sttservice.RegisterRequest{
-	// 	Username: "u1",
-	// 	Email:    "e1",
-	// 	Password: "p1"})
-	// fmt.Println(respReg.UserId, err)
 
-	// fmt.Println("Logiing in")
-	// respLog, err := client.Login(ctx, &sttservice.LoginRequest{
-	// 	Email:    "e1",
-	// 	Password: "p1"})
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Println(respLog.Token, err)
-	// TODO
-	// Implement switch case structure for all known statuses
 	for {
 		res, err := stream.Recv()
 		if err == io.EOF {
@@ -92,7 +72,34 @@ func SendRequest() error {
 	}
 }
 
-// read example file
+// Register registers new user with provided
+// username, email and password.
+// And returns user ID
+func (c *STTClient) Register(ctx context.Context, u, e, p string) (int64, error) {
+	respReg, err := c.SttServiceClient.Register(ctx, &sttservice.RegisterRequest{
+		Username: u,
+		Email:    e,
+		Password: p})
+	if err != nil {
+		return respReg.UserId, err
+	}
+
+	return respReg.UserId, err
+}
+
+// Login requests JWT token for provided email and password
+func (c *STTClient) Login(ctx context.Context, e, p string) (string, error) {
+	fmt.Println("Logiing in")
+	respLog, err := c.SttServiceClient.Login(ctx, &sttservice.LoginRequest{
+		Email:    e,
+		Password: p})
+	if err != nil {
+		return "", err
+	}
+	return respLog.Token, nil
+}
+
+// read audio file
 func readAudioFromFile() []byte {
 	audioBytes, err := os.ReadFile(cfg.FilePath)
 	if err != nil {
@@ -103,6 +110,6 @@ func readAudioFromFile() []byte {
 
 func fetchToken() *tokenAuth {
 	return &tokenAuth{
-		token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImUxIiwiZXhwIjoxNzAyODUzNDgwLCJ1aWQiOjF9.Yabm0qlMDM3rptOR4oTLctKlrMd9fN4YO7qzSdBhzOk",
+		token: cfg.AuthToken,
 	}
 }
