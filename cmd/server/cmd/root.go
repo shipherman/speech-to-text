@@ -1,27 +1,29 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
+	"log"
+	"net"
+	"net/http"
 	"os"
+	"time"
+
+	_ "github.com/lib/pq"
+	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
+	"github.com/shipherman/speech-to-text/internal/clients"
+	"github.com/shipherman/speech-to-text/internal/transport/routes"
 
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 )
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "server",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "SpeechToText service. Accept wav audio files and returns text.",
+	Long:  `SpeechToText service. Accept wav audio files and returns text.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -33,6 +35,36 @@ func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
+	}
+
+	// Configure clients to connect to other services
+	// STT
+	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
+
+	// err = clients.ReqSTT("/home/tas/Downloads/sample.wav")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// Server configuration
+	server := http.Server{
+		Addr:    "127.0.0.1:8080",
+		Handler: routes.Router,
+	}
+
+	// Listener configuration for gRPC connection
+	tcpListen, err := net.Listen("tcp", ":8282")
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcServer := grpc.NewServer()
+
+	sttservice.RegisterSttServiceServer(grpcServer, &TranscribeServer{})
+
+	// Run http and grpc server
+	for {
+		log.Fatal(grpcServer.Serve(tcpListen))
+		log.Fatal(server.ListenAndServe())
 	}
 }
 
@@ -47,5 +79,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
