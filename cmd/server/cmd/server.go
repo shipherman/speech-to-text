@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
@@ -66,8 +67,8 @@ func (t *TranscribeServer) TranscribeAudio(
 	// get User object from db
 
 	// Save data to DB
-	// email, err := t.auth.GetEmail(d())
-	// t.DBClient.SaveNewAudio(audioFileHashSum, t.Store, )
+	// email, err := t.auth.GetEmail(context.Background())
+	// t.DBClient.SaveNewAudio(audioFileHashSum, t.Store)
 
 	// Save audio to store
 	err = t.Store.Save(string(audioFileHashSum), audio.Audio)
@@ -75,21 +76,39 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 
+	// Mark audio as ordered
+	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ORDERED}
+	stream.Send(response)
+
 	// Call remote STT neural network service
 	text, err := clients.ReqSTT(audio.Audio)
 	if err != nil {
 		return err
 	}
 
-	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ORDERED}
-	stream.Send(response)
 	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_DONE}
 	stream.Send(response)
 
-	fmt.Println(text)
+	log.Println(text)
+
 	return nil
 }
 
+// TODO
+// Implement inmemory results store
+//
+// GetResults executing requested audio trascription from memory and
+// sends it to a client
+func (t *TranscribeServer) GetResult(ctx context.Context,
+	in *sttservice.Text,
+) (*sttservice.Text, error) {
+	return nil, nil
+}
+
+// TODO
+// Implement request to DB
+//
+// GetHistory returns array of {audiohash: text} pairs to a client
 func (t *TranscribeServer) GetHistory(ctx context.Context,
 	in *sttservice.User,
 ) (*sttservice.History, error) {

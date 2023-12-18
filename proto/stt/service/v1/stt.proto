@@ -11,6 +11,7 @@ service SttService {
     rpc Register (RegisterRequest) returns (RegisterResponse) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}
     rpc TranscribeAudio(Audio) returns (stream Status) {}
+    rpc GetResult(Text) returns (Text) {}
     rpc GetHistory(User) returns (History) {}
 }
 
