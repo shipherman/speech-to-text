@@ -14,7 +14,7 @@ import (
 )
 
 type Client interface {
-	SendRequest(context.Context) error
+	SendRequest(context.Context) (string, error)
 	Register(ctx context.Context, user string, email string, password string) (int64, error)
 	Login(context.Context, string, string) (string, error)
 }
@@ -46,7 +46,7 @@ func NewClient() (Client, error) {
 
 // Send request to server
 // Recieve statuses till Done
-func (c *STTClient) SendRequest(ctx context.Context) error {
+func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 	// perRPC := fetchToken()
 
 	// sample audio load
@@ -54,30 +54,31 @@ func (c *STTClient) SendRequest(ctx context.Context) error {
 	audio.Audio = readAudioFromFile()
 	_, err := audioconverter.CheckWAVHeader(audio.Audio)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	stream, err := c.TranscribeAudio(ctx, &audio)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	for {
 		res, err := stream.Recv()
 		if err == io.EOF {
-			return err
+			return "", err
 		}
 		switch res.Status {
 		case sttservice.EnumStatus_STATUS_ACCEPTED:
-			fmt.Println("accepted")
+			log.Println("accepted")
 		case sttservice.EnumStatus_STATUS_ORDERED:
-			fmt.Println("orderd")
+			log.Println("orderd")
 		case sttservice.EnumStatus_STATUS_PROCESSING:
-			fmt.Println("processing")
+			log.Println("processing")
 		case sttservice.EnumStatus_STATUS_DONE:
-			fmt.Println("DONE")
+			log.Println("DONE")
+			return res.Text.Text, nil
 		case sttservice.EnumStatus_STATUS_DECLINED:
-			return fmt.Errorf("audio file could not be processed")
+			return "", fmt.Errorf("audio file could not be processed")
 		}
 	}
 }

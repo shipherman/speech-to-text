@@ -32,7 +32,13 @@ to quickly create a Cobra application.`,
 		t := time.Now().Add(time.Minute * cfg.Timeout)
 		ctx, cancel := context.WithDeadline(context.Background(), t)
 		defer cancel()
-		c.SendRequest(ctx)
+		text, err := c.SendRequest(ctx)
+		if err != nil {
+			log.Println(err)
+		}
+
+		// Show the result
+		fmt.Println(text)
 	},
 }
 
@@ -59,4 +65,5 @@ func init() {
 		"authtoken",
 		"",
 		"Authentication token string")
+	transcribeCmd.MarkFlagRequired("authtoken")
 }
