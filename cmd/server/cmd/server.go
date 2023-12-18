@@ -51,6 +51,8 @@ func (t *TranscribeServer) TranscribeAudio(
 	if err != nil {
 		return err
 	}
+
+	// Send status ACCEPTED to client
 	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ACCEPTED}
 	stream.Send(response)
 
@@ -60,6 +62,7 @@ func (t *TranscribeServer) TranscribeAudio(
 	if err != nil {
 		return err
 	}
+
 	// Use hex string as filename
 	audioFileHashSum := hex.EncodeToString(h.Sum(nil))
 
@@ -76,7 +79,7 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 
-	// Mark audio as ordered
+	// Send status ORDERED to client
 	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ORDERED}
 	stream.Send(response)
 
@@ -86,23 +89,20 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 
-	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_DONE}
+	// Send status DONE to client
+	// with text inside
+	response = &sttservice.Status{
+		Status: sttservice.EnumStatus_STATUS_DONE,
+		Text: &sttservice.Text{
+			Text: text,
+			Len:  int32(len(text)),
+		},
+	}
 	stream.Send(response)
 
 	log.Println(text)
 
 	return nil
-}
-
-// TODO
-// Implement inmemory results store
-//
-// GetResults executing requested audio trascription from memory and
-// sends it to a client
-func (t *TranscribeServer) GetResult(ctx context.Context,
-	in *sttservice.Text,
-) (*sttservice.Text, error) {
-	return nil, nil
 }
 
 // TODO

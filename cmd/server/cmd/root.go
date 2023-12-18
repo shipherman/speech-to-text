@@ -110,9 +110,11 @@ func Execute() {
 
 	// Register STT Server with Transcribe server instance
 	sttservice.RegisterSttServiceServer(grpcServer,
-		&TranscribeServer{DBClient: dbclient,
-			auth:  *servAuth,
-			Store: fsstore})
+		&TranscribeServer{
+			DBClient: dbclient,
+			auth:     *servAuth,
+			Store:    fsstore,
+		})
 
 	// Run http and grpc server
 	for {
