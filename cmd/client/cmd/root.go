@@ -12,15 +12,18 @@ import (
 
 // TODO
 // Add JSON configuration support
-type Configuratoin struct {
+type Options struct {
 	ServerAddress string `json:"server_address"`
 	FilePath      string
 	CACert        string
 	AuthToken     string
 	Timeout       time.Duration
+	User          string
+	Email         string
+	Password      string
 }
 
-var cfg Configuratoin
+var cfg Options
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -41,7 +44,6 @@ func Execute() {
 	}
 
 	// Run request
-	Run()
 	// err = SendRequest()
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -64,22 +66,14 @@ func init() {
 		"a",
 		"localhost:8282",
 		"STT server address")
-	rootCmd.PersistentFlags().StringVarP(
-		&cfg.FilePath,
-		"filepath",
-		"f",
-		"/tmp/stt/ru-Peacock.wav",
-		"Path to file to process")
-	rootCmd.PersistentFlags().StringVarP(
+	rootCmd.PersistentFlags().StringVar(
 		&cfg.CACert,
 		"cacert",
-		"ca",
 		"./cert/ca_cert.pem",
 		"Path to CA certificate")
-	rootCmd.PersistentFlags().StringVarP(
-		&cfg.AuthToken,
-		"authtoken",
-		"auth",
-		"",
-		"Authentication token string")
+	rootCmd.PersistentFlags().DurationVar(
+		&cfg.Timeout,
+		"timeout",
+		time.Minute*1,
+		"Command execution timeout")
 }

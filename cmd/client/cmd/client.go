@@ -15,7 +15,7 @@ import (
 
 type Client interface {
 	SendRequest(context.Context) error
-	Register(context.Context, string, string, string) (int64, error)
+	Register(ctx context.Context, user string, email string, password string) (int64, error)
 	Login(context.Context, string, string) (string, error)
 }
 
@@ -67,8 +67,18 @@ func (c *STTClient) SendRequest(ctx context.Context) error {
 		if err == io.EOF {
 			return err
 		}
-
-		fmt.Println(res.Status)
+		switch res.Status {
+		case sttservice.EnumStatus_STATUS_ACCEPTED:
+			fmt.Println("accepted")
+		case sttservice.EnumStatus_STATUS_ORDERED:
+			fmt.Println("orderd")
+		case sttservice.EnumStatus_STATUS_PROCESSING:
+			fmt.Println("processing")
+		case sttservice.EnumStatus_STATUS_DONE:
+			fmt.Println("DONE")
+		case sttservice.EnumStatus_STATUS_DECLINED:
+			return fmt.Errorf("audio file could not be processed")
+		}
 	}
 }
 
@@ -81,7 +91,7 @@ func (c *STTClient) Register(ctx context.Context, u, e, p string) (int64, error)
 		Email:    e,
 		Password: p})
 	if err != nil {
-		return respReg.UserId, err
+		return 0, err
 	}
 
 	return respReg.UserId, err
