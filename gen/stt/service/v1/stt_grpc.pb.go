@@ -24,7 +24,6 @@ const (
 	SttService_Register_FullMethodName        = "/stt.service.v1.SttService/Register"
 	SttService_Login_FullMethodName           = "/stt.service.v1.SttService/Login"
 	SttService_TranscribeAudio_FullMethodName = "/stt.service.v1.SttService/TranscribeAudio"
-	SttService_GetResult_FullMethodName       = "/stt.service.v1.SttService/GetResult"
 	SttService_GetHistory_FullMethodName      = "/stt.service.v1.SttService/GetHistory"
 )
 
@@ -35,7 +34,6 @@ type SttServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (SttService_TranscribeAudioClient, error)
-	GetResult(ctx context.Context, in *Text, opts ...grpc.CallOption) (*Text, error)
 	GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error)
 }
 
@@ -97,15 +95,6 @@ func (x *sttServiceTranscribeAudioClient) Recv() (*Status, error) {
 	return m, nil
 }
 
-func (c *sttServiceClient) GetResult(ctx context.Context, in *Text, opts ...grpc.CallOption) (*Text, error) {
-	out := new(Text)
-	err := c.cc.Invoke(ctx, SttService_GetResult_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *sttServiceClient) GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error) {
 	out := new(History)
 	err := c.cc.Invoke(ctx, SttService_GetHistory_FullMethodName, in, out, opts...)
@@ -122,7 +111,6 @@ type SttServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error
-	GetResult(context.Context, *Text) (*Text, error)
 	GetHistory(context.Context, *User) (*History, error)
 	mustEmbedUnimplementedSttServiceServer()
 }
@@ -139,9 +127,6 @@ func (UnimplementedSttServiceServer) Login(context.Context, *LoginRequest) (*Log
 }
 func (UnimplementedSttServiceServer) TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error {
 	return status.Errorf(codes.Unimplemented, "method TranscribeAudio not implemented")
-}
-func (UnimplementedSttServiceServer) GetResult(context.Context, *Text) (*Text, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetResult not implemented")
 }
 func (UnimplementedSttServiceServer) GetHistory(context.Context, *User) (*History, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHistory not implemented")
@@ -216,24 +201,6 @@ func (x *sttServiceTranscribeAudioServer) Send(m *Status) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _SttService_GetResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Text)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SttServiceServer).GetResult(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SttService_GetResult_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SttServiceServer).GetResult(ctx, req.(*Text))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SttService_GetHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(User)
 	if err := dec(in); err != nil {
@@ -266,10 +233,6 @@ var SttService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _SttService_Login_Handler,
-		},
-		{
-			MethodName: "GetResult",
-			Handler:    _SttService_GetResult_Handler,
 		},
 		{
 			MethodName: "GetHistory",
