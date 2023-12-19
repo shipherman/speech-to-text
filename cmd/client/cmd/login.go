@@ -18,7 +18,6 @@ var loginCmd = &cobra.Command{
 	Short: "Login to STT service",
 	Long:  `Login command returns JWT token to use it for *transcribe* subcommand`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("login called")
 		c, err := NewClient()
 		if err != nil {
 			log.Println(err)
