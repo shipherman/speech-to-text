@@ -18,6 +18,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type Email struct {
+	string
+}
 type Auth struct {
 	// log         *slog.Logger
 	usrSaver    UserSaver
@@ -33,7 +36,8 @@ var (
 
 // Headers
 var (
-	headerAuthorize = "authorization"
+	headerAuthorize       = "authorization"
+	headerEmail     Email = Email{"email"}
 )
 
 type UserSaver interface {
@@ -180,10 +184,9 @@ func AuthStreamInterceptor(
 
 	newCtx := ctx
 
-	// !!! replace string with string const
 	if len(email) > 0 {
-		newCtx = context.WithValue(ctx, "email", email)
-		log.Println(newCtx.Value("email"))
+		newCtx = context.WithValue(ctx, headerEmail, email)
+		log.Println(newCtx.Value(headerEmail))
 	}
 
 	err = handler(srv, stream)
