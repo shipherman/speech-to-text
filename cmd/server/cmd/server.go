@@ -70,11 +70,21 @@ func (t *TranscribeServer) TranscribeAudio(
 	// get User object from db
 
 	// Save data to DB
-	// email, err := t.auth.GetEmail(context.Background())
-	// t.DBClient.SaveNewAudio(audioFileHashSum, t.Store)
+	// - execute email from auth token -
+	email, err := t.auth.GetEmail(stream.Context())
+	if err != nil {
+		return err
+	}
+	// - get user obj from db -
+	user, err := t.DBClient.GetUser(context.Background(), email)
+	if err != nil {
+		return err
+	}
+	// - save to db -
+	t.DBClient.SaveNewAudio(audioFileHashSum, t.Store, user)
 
 	// Save audio to store
-	err = t.Store.Save(string(audioFileHashSum), audio.Audio)
+	err = t.Store.Save(audioFileHashSum, audio.Audio)
 	if err != nil {
 		return err
 	}
