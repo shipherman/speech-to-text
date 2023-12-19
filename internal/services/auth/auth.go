@@ -175,18 +175,9 @@ func AuthStreamInterceptor(
 ) error {
 	ctx := stream.Context()
 	fmt.Println("stream interceptor auth")
-	email, err := CheckAuth(ctx)
+	err := CheckAuth(ctx)
 	if err != nil {
 		return err
-	}
-
-	log.Printf("gRPC method: %s, %v", info.FullMethod, srv)
-
-	newCtx := ctx
-
-	if len(email) > 0 {
-		newCtx = context.WithValue(ctx, headerEmail, email)
-		log.Println(newCtx.Value(headerEmail))
 	}
 
 	err = handler(srv, stream)
@@ -198,11 +189,11 @@ func AuthStreamInterceptor(
 
 // CheckAuth validates user token.
 // Return error on invalid token
-func CheckAuth(ctx context.Context) (email string, err error) {
+func CheckAuth(ctx context.Context) (err error) {
 	claims := &Claims{}
 	tokenString, err := extractHeader(ctx, headerAuthorize)
 	if err != nil {
-		return "", err
+		return err
 	}
 	//
 	// !!! Hide secret key !!!
@@ -211,14 +202,14 @@ func CheckAuth(ctx context.Context) (email string, err error) {
 	})
 	if err != nil {
 		log.Println(err)
-		return "", err
+		return err
 	}
 
 	if !token.Valid {
-		return claims.Email, fmt.Errorf("invalid token")
+		return fmt.Errorf("invalid token")
 	}
 
-	return claims.Email, nil
+	return nil
 }
 
 // extractHeader returns value for specified header
