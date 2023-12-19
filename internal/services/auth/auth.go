@@ -106,7 +106,7 @@ func (a *Auth) Login(
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	s, _ := a.GetEmail(context.Background(), token)
+	s, _ := a.GetEmail(ctx)
 
 	fmt.Println(s)
 
@@ -139,10 +139,14 @@ func (a *Auth) RegisterNewUser(ctx context.Context,
 	return id, nil
 }
 
-func (a *Auth) GetEmail(ctx context.Context,
-	tokenString string,
-) (string, error) {
+// GetEmail returns email executed from JWT header
+func (a *Auth) GetEmail(ctx context.Context) (string, error) {
 	claims := &Claims{}
+
+	tokenString, err := extractHeader(ctx, headerAuthorize)
+	if err != nil {
+		return "", err
+	}
 
 	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
 		return []byte(a.Secret), nil
@@ -176,6 +180,7 @@ func AuthStreamInterceptor(
 
 	newCtx := ctx
 
+	// !!! replace string with string const
 	if len(email) > 0 {
 		newCtx = context.WithValue(ctx, "email", email)
 		log.Println(newCtx.Value("email"))
@@ -196,7 +201,8 @@ func CheckAuth(ctx context.Context) (email string, err error) {
 	if err != nil {
 		return "", err
 	}
-
+	//
+	// !!! Hide secret key !!!
 	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
 		return []byte("verysecretstring"), nil
 	})
@@ -212,11 +218,7 @@ func CheckAuth(ctx context.Context) (email string, err error) {
 	return claims.Email, nil
 }
 
-// func getTokenFromContext(ctx context.Context) string {
-// 	val := metautils.ExtractIncoming(ctx).Get(headerAuthorize)
-// 	return val
-// }
-
+// extractHeader returns value for specified header
 func extractHeader(ctx context.Context, header string) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
