@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"os"
 
@@ -64,7 +63,7 @@ func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 
 	for {
 		res, err := stream.Recv()
-		if err == io.EOF {
+		if err != nil {
 			return "", err
 		}
 		switch res.Status {
