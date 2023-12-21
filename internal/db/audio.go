@@ -4,15 +4,14 @@ import (
 	"context"
 
 	"github.com/shipherman/speech-to-text/gen/ent"
-	"github.com/shipherman/speech-to-text/internal/models"
 )
 
 // SaveNewAudio creates new tuple in table Audio
-func (c *Connector) SaveNewAudio(audioHash string, store models.Store, u *ent.User) (*ent.Audio, error) {
+func (c *Connector) SaveNewAudio(audioHash string, audioText string, u *ent.User) (*ent.Audio, error) {
 	entAudio, err := c.Client.Audio.Create().
 		SetHash(audioHash).
 		SetUser(u).
-		SetPath(store.GetStorePath()).
+		SetText(audioText).
 		Save(context.Background())
 	if err != nil {
 		return entAudio, err

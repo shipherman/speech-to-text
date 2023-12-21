@@ -69,6 +69,12 @@ func (t *TranscribeServer) TranscribeAudio(
 	// Execute user email frome jwt
 	// get User object from db
 
+	// Call remote STT neural network service
+	audioText, err := clients.ReqSTT(audio.Audio)
+	if err != nil {
+		return err
+	}
+
 	// Save data to DB
 	// - execute email from auth token -
 	email, err := t.auth.GetEmail(stream.Context())
@@ -81,7 +87,7 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 	// - save to db -
-	t.DBClient.SaveNewAudio(audioFileHashSum, t.Store, user)
+	t.DBClient.SaveNewAudio(audioFileHashSum, audioText, user)
 
 	// Save audio to store
 	err = t.Store.Save(audioFileHashSum, audio.Audio)
@@ -93,24 +99,19 @@ func (t *TranscribeServer) TranscribeAudio(
 	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ORDERED}
 	stream.Send(response)
 
-	// Call remote STT neural network service
-	text, err := clients.ReqSTT(audio.Audio)
-	if err != nil {
-		return err
-	}
-
 	// Send status DONE to client
 	// with text inside
 	response = &sttservice.Status{
 		Status: sttservice.EnumStatus_STATUS_DONE,
 		Text: &sttservice.Text{
-			Text: text,
-			Len:  int32(len(text)),
+			Text: audioText,
+			Len:  int32(len(audioText)),
 		},
 	}
 	stream.Send(response)
 
-	log.Println(text)
+	// View transcribtion at server side
+	log.Println(audioText)
 
 	return nil
 }
