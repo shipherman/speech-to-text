@@ -32,7 +32,7 @@ func (t *TranscribeServer) TranscribeAudio(
 	stream sttservice.SttService_TranscribeAudioServer,
 ) error {
 	// TODO
-	// Implement pipline for processing audio
+	// Implement pipeline for processing audio
 	// 1. Check file, if it's a valid wav file
 	//		send status ACCEPTED
 	// 2. Put file to the worker pool for saving
@@ -45,6 +45,9 @@ func (t *TranscribeServer) TranscribeAudio(
 	//	convert *.ogg to *.wav [for telegram bot]
 
 	var response *sttservice.Status
+
+	// TODO
+	// Create worker pool inside TranscribeAudio call
 
 	// Check wave header and if its valid send status ACCEPTED
 	_, err := audioconverter.CheckWAVHeader(audio.Audio)
@@ -150,7 +153,7 @@ func (t *TranscribeServer) Register(ctx context.Context,
 	return &sttservice.RegisterResponse{UserId: userID}, nil
 }
 
-// Login authenticate users
+// Login authenticates users
 func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginRequest) (*sttservice.LoginResponse, error) {
 	if in.Email == "" {
 		return nil, status.Error(codes.InvalidArgument, "email is required")

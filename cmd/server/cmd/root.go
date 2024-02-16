@@ -93,7 +93,7 @@ func Execute() {
 	servAuth.Secret = cfg.Secret
 
 	// Load server certificate
-	cert, err := tls.LoadX509KeyPair("./cert/server_cert.pem", "./cert/server_key.pem")
+	cert, err := tls.LoadX509KeyPair("./cert_test/server_cert.pem", "./cert/server_key.pem")
 	if err != nil {
 		log.Fatalf("failed to load key pair: %s", err)
 	}

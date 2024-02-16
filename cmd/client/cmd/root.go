@@ -69,7 +69,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(
 		&cfg.CACert,
 		"cacert",
-		"./cert/ca_cert.pem",
+		"./cert_test/ca_cert.pem",
 		"Path to CA certificate")
 	rootCmd.PersistentFlags().DurationVar(
 		&cfg.Timeout,
