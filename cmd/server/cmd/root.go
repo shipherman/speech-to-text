@@ -89,11 +89,10 @@ func Execute() {
 	// Auth interceptor initiation
 	// h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
 	// slogger := slog.New(h)
-	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3)
-	servAuth.Secret = cfg.Secret
+	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3, cfg.Secret)
 
 	// Load server certificate
-	cert, err := tls.LoadX509KeyPair("./cert_test/server_cert.pem", "./cert/server_key.pem")
+	cert, err := tls.LoadX509KeyPair("./cert_test/server_cert.pem", "./cert_test/server_key.pem")
 	if err != nil {
 		log.Fatalf("failed to load key pair: %s", err)
 	}
@@ -102,7 +101,7 @@ func Execute() {
 	// Authenticator + ATLS creds
 	opts := []grpc.ServerOption{
 		// grpc.ChainUnaryInterceptor(auth.AuthUnaryInterceptor),
-		grpc.ChainStreamInterceptor(auth.AuthStreamInterceptor, grpc_middleware.ChainStreamServer(
+		grpc.ChainStreamInterceptor(servAuth.AuthStreamInterceptor, grpc_middleware.ChainStreamServer(
 			grpc_zap.StreamServerInterceptor(logger.ZapInterceptor()))),
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 	}

@@ -26,7 +26,7 @@ type Auth struct {
 	usrSaver    UserSaver
 	usrProvider UserProvider
 	tokenTTL    time.Duration
-	Secret      string
+	secret      string
 }
 
 // Defined Errors
@@ -66,11 +66,13 @@ func New(
 	userSaver UserSaver,
 	userProvider UserProvider,
 	tokenTTL time.Duration,
+	secret string,
 ) *Auth {
 	return &Auth{
 		usrSaver:    userSaver,
 		usrProvider: userProvider,
 		tokenTTL:    tokenTTL,
+		secret:      secret,
 	}
 }
 
@@ -103,7 +105,7 @@ func (a *Auth) Login(
 
 	// log.Info("user logged in successfully")
 
-	token, err := jwt.NewToken(*user, a.tokenTTL, a.Secret)
+	token, err := jwt.NewToken(*user, a.tokenTTL, a.secret)
 	if err != nil {
 		// a.log.Error("failed to generate token")
 
@@ -153,7 +155,7 @@ func (a *Auth) GetEmail(ctx context.Context) (string, error) {
 	}
 
 	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
-		return []byte(a.Secret), nil
+		return []byte(a.secret), nil
 	})
 	if err != nil {
 		return "", err
@@ -167,7 +169,7 @@ func (a *Auth) GetEmail(ctx context.Context) (string, error) {
 }
 
 // AuthInterceptor provides auth for api
-func AuthStreamInterceptor(
+func (a *Auth) AuthStreamInterceptor(
 	srv interface{},
 	stream grpc.ServerStream,
 	info *grpc.StreamServerInfo,
@@ -175,7 +177,7 @@ func AuthStreamInterceptor(
 ) error {
 	ctx := stream.Context()
 	fmt.Println("stream interceptor auth")
-	err := CheckAuth(ctx)
+	err := a.CheckAuth(ctx)
 	if err != nil {
 		return err
 	}
@@ -189,7 +191,7 @@ func AuthStreamInterceptor(
 
 // CheckAuth validates user token.
 // Return error on invalid token
-func CheckAuth(ctx context.Context) (err error) {
+func (a *Auth) CheckAuth(ctx context.Context) (err error) {
 	claims := &Claims{}
 	tokenString, err := extractHeader(ctx, headerAuthorize)
 	if err != nil {
@@ -198,7 +200,7 @@ func CheckAuth(ctx context.Context) (err error) {
 	//
 	// !!! Hide secret key !!!
 	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
-		return []byte("verysecretstring"), nil
+		return []byte(a.secret), nil
 	})
 	if err != nil {
 		log.Println(err)
