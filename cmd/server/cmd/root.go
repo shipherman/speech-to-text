@@ -33,6 +33,7 @@ type Config struct {
 	STTAddress    string
 	StorePath     string
 	Secret        string
+	QueueSize     int
 }
 
 var cfg Config
@@ -113,7 +114,7 @@ func Execute() {
 			DBClient: dbclient,
 			auth:     *servAuth,
 			Store:    fsstore,
-			queue:    Queue{C: make(chan struct{}, 4)}, // !!! change hardcoded number to  parameter
+			queue:    Queue{C: make(chan struct{}, cfg.QueueSize)},
 		})
 
 	// Run http and grpc server
@@ -162,7 +163,12 @@ func init() {
 			"secret",
 			"verysecretstring",
 			"Secret string to generete JWT")
-
+	rootCmd.PersistentFlags().
+		IntVarP(&cfg.QueueSize,
+			"queue-size",
+			"q",
+			3,
+			"Size of server queue")
 	// Configure db schema
 	err := db.ConfigureSchema(cfg.DSN)
 	if err != nil {

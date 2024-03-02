@@ -149,12 +149,9 @@ func (t *TranscribeServer) Register(ctx context.Context,
 
 	userID, err := t.auth.RegisterNewUser(ctx, in.Username, in.Email, in.Password)
 	if err != nil {
-		return nil, err
-	}
-
-	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	return &sttservice.RegisterResponse{UserId: userID}, nil
 }
 
