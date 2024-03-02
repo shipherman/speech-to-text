@@ -22,6 +22,7 @@ type TranscribeServer struct {
 	DBClient db.Connector
 	Store    models.Store
 	auth     auth.Auth
+	queue    Queue
 }
 
 // TranscribeAudio provides main functionality of service
@@ -54,6 +55,10 @@ func (t *TranscribeServer) TranscribeAudio(
 	if err != nil {
 		return err
 	}
+
+	// SEMAPHORE
+	t.queue.Acquire()
+	defer t.queue.Release()
 
 	// Send status ACCEPTED to client
 	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ACCEPTED}

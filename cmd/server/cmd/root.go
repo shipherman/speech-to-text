@@ -113,6 +113,7 @@ func Execute() {
 			DBClient: dbclient,
 			auth:     *servAuth,
 			Store:    fsstore,
+			queue:    Queue{C: make(chan struct{}, 4)}, // !!! change hardcoded number to  parameter
 		})
 
 	// Run http and grpc server
