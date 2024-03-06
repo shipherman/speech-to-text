@@ -22,7 +22,6 @@ type TranscribeServer struct {
 	DBClient db.Connector
 	Store    models.Store
 	auth     auth.Auth
-	queue    Queue
 }
 
 // TranscribeAudio provides main functionality of service
@@ -32,33 +31,16 @@ func (t *TranscribeServer) TranscribeAudio(
 	audio *sttservice.Audio,
 	stream sttservice.SttService_TranscribeAudioServer,
 ) error {
-	// TODO
-	// Implement pipeline for processing audio
-	// 1. Check file, if it's a valid wav file
-	//		send status ACCEPTED
-	// 2. Put file to the worker pool for saving
-	// 		send status ORDERED
-	// 3. Transcribe file
-	// 		send status DONE
-	// *send status INVALID on invalid files
-	//
 	// Additional
 	//	convert *.ogg to *.wav [for telegram bot]
 
 	var response *sttservice.Status
-
-	// TODO
-	// Create worker pool inside TranscribeAudio call
 
 	// Check wave header and if its valid send status ACCEPTED
 	_, err := audioconverter.CheckWAVHeader(audio.Audio)
 	if err != nil {
 		return err
 	}
-
-	// SEMAPHORE
-	t.queue.Acquire()
-	defer t.queue.Release()
 
 	// Send status ACCEPTED to client
 	response = &sttservice.Status{Status: sttservice.EnumStatus_STATUS_ACCEPTED}
