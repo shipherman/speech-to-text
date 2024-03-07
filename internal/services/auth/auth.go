@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	jwtv5 "github.com/golang-jwt/jwt/v5"
@@ -22,7 +21,6 @@ type Email struct {
 	string
 }
 type Auth struct {
-	// log         *slog.Logger
 	usrSaver    UserSaver
 	usrProvider UserProvider
 	tokenTTL    time.Duration
@@ -36,8 +34,7 @@ var (
 
 // Headers
 var (
-	headerAuthorize       = "authorization"
-	headerEmail     Email = Email{"email"}
+	headerAuthorize = "authorization"
 )
 
 type UserSaver interface {
@@ -92,8 +89,6 @@ func (a *Auth) Login(
 	// 	slog.String("username", email),
 	// )
 
-	// log.Info("attempting to login user")
-
 	user, err := a.usrProvider.GetUser(ctx, email)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
@@ -103,18 +98,12 @@ func (a *Auth) Login(
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
-	// log.Info("user logged in successfully")
-
 	token, err := jwt.NewToken(*user, a.tokenTTL, a.secret)
 	if err != nil {
 		// a.log.Error("failed to generate token")
 
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
-
-	s, _ := a.GetEmail(ctx)
-
-	fmt.Println(s)
 
 	return token, nil
 }
@@ -128,17 +117,8 @@ func (a *Auth) RegisterNewUser(ctx context.Context,
 ) (int64, error) {
 	const op = "Auth.RegisterNewUser"
 
-	// log := a.log.With(
-	// 	slog.String("op", op),
-	// 	slog.String("email", email),
-	// )
-
-	// log.Info("registering user")
-
 	id, err := a.usrSaver.SaveUser(ctx, username, email, pass)
 	if err != nil {
-		// log.Error("failed to save user")
-
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -176,7 +156,6 @@ func (a *Auth) AuthStreamInterceptor(
 	handler grpc.StreamHandler,
 ) error {
 	ctx := stream.Context()
-	fmt.Println("stream interceptor auth")
 	err := a.CheckAuth(ctx)
 	if err != nil {
 		return err
@@ -203,7 +182,6 @@ func (a *Auth) CheckAuth(ctx context.Context) (err error) {
 		return []byte(a.secret), nil
 	})
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 

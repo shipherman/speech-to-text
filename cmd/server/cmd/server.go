@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
-	"log"
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/clients"
@@ -100,9 +98,6 @@ func (t *TranscribeServer) TranscribeAudio(
 	}
 	stream.Send(response)
 
-	// View transcribtion at server side
-	log.Println(audioText)
-
 	return nil
 }
 
@@ -147,7 +142,6 @@ func (t *TranscribeServer) Login(ctx context.Context, in *sttservice.LoginReques
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	fmt.Println("TServer Login")
 	token, err := t.auth.Login(ctx, in.GetEmail(), in.GetPassword())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to login")

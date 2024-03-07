@@ -38,8 +38,6 @@ type Config struct {
 var cfg Config
 var DBConn db.Connector
 
-// var programLevel = new(slog.LevelVar)
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "server",
@@ -62,12 +60,6 @@ func Execute() {
 	// STT
 	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
 
-	// Server http configuration
-	// server := http.Server{
-	// 	Addr:    "127.0.0.1:8080",
-	// 	Handler: routes.Router,
-	// }
-
 	// Listener configuration for gRPC connection
 	tcpListen, err := net.Listen("tcp", cfg.ServerAddress)
 	if err != nil {
@@ -87,8 +79,6 @@ func Execute() {
 	fsstore := fsstore.NewFSStore(cfg.StorePath)
 
 	// Auth interceptor initiation
-	// h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
-	// slogger := slog.New(h)
 	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3, cfg.Secret)
 
 	// Load server certificate
@@ -119,7 +109,6 @@ func Execute() {
 	// Run http and grpc server
 	for {
 		log.Fatal(grpcServer.Serve(tcpListen))
-		// log.Fatal(server.ListenAndServe())
 	}
 }
 
