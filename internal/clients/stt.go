@@ -1,4 +1,4 @@
-// Interaction with STT service
+// Interaction with STT service [docker image with STT model deployed]
 package clients
 
 import (
