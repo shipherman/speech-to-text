@@ -37,7 +37,11 @@ func (f *FSStore) Save(name string, data []byte) error {
 }
 
 func (f *FSStore) Get(name string) ([]byte, error) {
-	return nil, nil
+	b, err := os.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 func (f *FSStore) GetStorePath() string {
