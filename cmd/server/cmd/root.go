@@ -33,6 +33,8 @@ type Config struct {
 	STTAddress    string
 	StorePath     string
 	Secret        string
+	ServerCert    string
+	ServerKey     string
 }
 
 var cfg Config
@@ -82,7 +84,7 @@ func Execute() {
 	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3, cfg.Secret)
 
 	// Load server certificate
-	cert, err := tls.LoadX509KeyPair("./cert_test/server_cert.pem", "./cert_test/server_key.pem")
+	cert, err := tls.LoadX509KeyPair(cfg.ServerCert, cfg.ServerKey)
 	if err != nil {
 		log.Fatalf("failed to load key pair: %s", err)
 	}
@@ -151,6 +153,16 @@ func init() {
 			"secret",
 			"verysecretstring",
 			"Secret string to generete JWT")
+	rootCmd.PersistentFlags().
+		StringVar(&cfg.ServerCert,
+			"server-certificate",
+			"./cert_test/server_cert.pem",
+			"Path to server certificate")
+	rootCmd.PersistentFlags().
+		StringVar(&cfg.ServerKey,
+			"server-key",
+			"./cert_test/server_key.pem",
+			"Path to server key")
 
 		// Configure db schema
 	err := db.ConfigureSchema(cfg.DSN)
