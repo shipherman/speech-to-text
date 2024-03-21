@@ -33,6 +33,7 @@ type Config struct {
 	STTAddress    string
 	StorePath     string
 	Secret        string
+	AuthTimeOut   time.Duration
 	ServerCert    string
 	ServerKey     string
 }
@@ -81,7 +82,7 @@ func Execute() {
 	fsstore := fsstore.NewFSStore(cfg.StorePath)
 
 	// Auth interceptor initiation
-	servAuth := auth.New(&dbclient, &dbclient, time.Hour*3, cfg.Secret)
+	servAuth := auth.New(&dbclient, &dbclient, cfg.AuthTimeOut, cfg.Secret)
 
 	// Load server certificate
 	cert, err := tls.LoadX509KeyPair(cfg.ServerCert, cfg.ServerKey)
@@ -163,6 +164,11 @@ func init() {
 			"server-key",
 			"./cert_test/server_key.pem",
 			"Path to server key")
+	rootCmd.PersistentFlags().
+		DurationVar(&cfg.AuthTimeOut,
+			"auth-timeout",
+			time.Hour*3,
+			"Timeout for authenticator server provides to clients")
 
 		// Configure db schema
 	err := db.ConfigureSchema(cfg.DSN)
