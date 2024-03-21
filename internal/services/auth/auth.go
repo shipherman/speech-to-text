@@ -176,8 +176,7 @@ func (a *Auth) CheckAuth(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	//
-	// !!! Hide secret key !!!
+
 	token, err := jwtv5.ParseWithClaims(tokenString, claims, func(t *jwtv5.Token) (interface{}, error) {
 		return []byte(a.secret), nil
 	})
