@@ -60,7 +60,7 @@ func Execute() {
 
 	// Configure clients to connect to other services
 	// STT
-	clients.ConfigureSTT("http://localhost:9090", time.Second*5)
+	clients.ConfigureSTT(cfg.STTAddress, time.Second*5)
 
 	// Listener configuration for gRPC connection
 	tcpListen, err := net.Listen("tcp", cfg.ServerAddress)
@@ -134,7 +134,7 @@ func init() {
 		StringVarP(&cfg.STTAddress,
 			"stt-address",
 			"s",
-			"localhost:9090",
+			"http://localhost:9090",
 			"Address to connect to Speech-to-text neural network service")
 	rootCmd.PersistentFlags().
 		StringVarP(&cfg.DSN,
