@@ -34,7 +34,7 @@ type SttServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	TranscribeAudio(ctx context.Context, in *Audio, opts ...grpc.CallOption) (SttService_TranscribeAudioClient, error)
-	GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error)
+	GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (SttService_GetHistoryClient, error)
 }
 
 type sttServiceClient struct {
@@ -95,13 +95,36 @@ func (x *sttServiceTranscribeAudioClient) Recv() (*Status, error) {
 	return m, nil
 }
 
-func (c *sttServiceClient) GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (*History, error) {
-	out := new(History)
-	err := c.cc.Invoke(ctx, SttService_GetHistory_FullMethodName, in, out, opts...)
+func (c *sttServiceClient) GetHistory(ctx context.Context, in *User, opts ...grpc.CallOption) (SttService_GetHistoryClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SttService_ServiceDesc.Streams[1], SttService_GetHistory_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &sttServiceGetHistoryClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type SttService_GetHistoryClient interface {
+	Recv() (*Text, error)
+	grpc.ClientStream
+}
+
+type sttServiceGetHistoryClient struct {
+	grpc.ClientStream
+}
+
+func (x *sttServiceGetHistoryClient) Recv() (*Text, error) {
+	m := new(Text)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // SttServiceServer is the server API for SttService service.
@@ -111,7 +134,7 @@ type SttServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error
-	GetHistory(context.Context, *User) (*History, error)
+	GetHistory(*User, SttService_GetHistoryServer) error
 	mustEmbedUnimplementedSttServiceServer()
 }
 
@@ -128,8 +151,8 @@ func (UnimplementedSttServiceServer) Login(context.Context, *LoginRequest) (*Log
 func (UnimplementedSttServiceServer) TranscribeAudio(*Audio, SttService_TranscribeAudioServer) error {
 	return status.Errorf(codes.Unimplemented, "method TranscribeAudio not implemented")
 }
-func (UnimplementedSttServiceServer) GetHistory(context.Context, *User) (*History, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetHistory not implemented")
+func (UnimplementedSttServiceServer) GetHistory(*User, SttService_GetHistoryServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetHistory not implemented")
 }
 func (UnimplementedSttServiceServer) mustEmbedUnimplementedSttServiceServer() {}
 
@@ -201,22 +224,25 @@ func (x *sttServiceTranscribeAudioServer) Send(m *Status) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _SttService_GetHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
-	if err := dec(in); err != nil {
-		return nil, err
+func _SttService_GetHistory_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(User)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(SttServiceServer).GetHistory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SttService_GetHistory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SttServiceServer).GetHistory(ctx, req.(*User))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(SttServiceServer).GetHistory(m, &sttServiceGetHistoryServer{stream})
+}
+
+type SttService_GetHistoryServer interface {
+	Send(*Text) error
+	grpc.ServerStream
+}
+
+type sttServiceGetHistoryServer struct {
+	grpc.ServerStream
+}
+
+func (x *sttServiceGetHistoryServer) Send(m *Text) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // SttService_ServiceDesc is the grpc.ServiceDesc for SttService service.
@@ -234,15 +260,16 @@ var SttService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Login",
 			Handler:    _SttService_Login_Handler,
 		},
-		{
-			MethodName: "GetHistory",
-			Handler:    _SttService_GetHistory_Handler,
-		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "TranscribeAudio",
 			Handler:       _SttService_TranscribeAudio_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetHistory",
+			Handler:       _SttService_GetHistory_Handler,
 			ServerStreams: true,
 		},
 	},

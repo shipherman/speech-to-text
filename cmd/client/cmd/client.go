@@ -16,6 +16,7 @@ type Client interface {
 	SendRequest(context.Context) (string, error)
 	Register(ctx context.Context, user string, email string, password string) (int64, error)
 	Login(context.Context, string, string) (string, error)
+	GetHistory(context.Context) error
 }
 
 type STTClient struct {
@@ -107,6 +108,21 @@ func (c *STTClient) Login(ctx context.Context, e, p string) (string, error) {
 		return "", err
 	}
 	return respLog.Token, nil
+}
+
+func (c *STTClient) GetHistory(ctx context.Context) error {
+	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Email: "e"})
+	if err != nil {
+		return err
+	}
+
+	text, err := history.Recv()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(text)
+	return nil
 }
 
 // read audio file

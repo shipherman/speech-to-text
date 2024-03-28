@@ -105,11 +105,26 @@ func (t *TranscribeServer) TranscribeAudio(
 // Implement request to DB
 //
 // GetHistory returns array of {audiohash: text} pairs to a client
-func (t *TranscribeServer) GetHistory(ctx context.Context,
+func (t *TranscribeServer) GetHistory(
 	in *sttservice.User,
-) (*sttservice.History, error) {
-	// t.DBClient.GetHistory()
-	return nil, nil
+	server sttservice.SttService_GetHistoryServer,
+) error {
+	var text sttservice.Text
+	history, err := t.DBClient.GetHistory(server.Context(), in.Email)
+	if err != nil {
+		return err
+	}
+
+	for _, k := range history {
+		text.Text = k.Text
+		text.Len = text.GetLen()
+
+		err = server.Send(&text)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Register registers new user in stt service

@@ -11,7 +11,7 @@ service SttService {
     rpc Register (RegisterRequest) returns (RegisterResponse) {}
     rpc Login (LoginRequest) returns (LoginResponse) {}
     rpc TranscribeAudio(Audio) returns (stream Status) {}
-    rpc GetHistory(User) returns (History) {}
+    rpc GetHistory(User) returns (stream Text) {}
 }
 
 message RegisterRequest {
@@ -59,9 +59,4 @@ message Audio {
 message Text {
     string text = 1;
     int32 len = 2;
-}
-
-message History {
-    string data = 1;
-    Text text = 2;
 }
