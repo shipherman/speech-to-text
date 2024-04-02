@@ -25,11 +25,12 @@ type STTClient struct {
 
 var audio sttservice.Audio
 
+// NewCient creates a new instance of a connection to the server
 func NewClient() (Client, error) {
 	var client STTClient
 	creds, err := credentials.NewClientTLSFromFile(cfg.CACert, "")
 	if err != nil {
-		log.Fatalf("failed to load credentials: %v", err)
+		return nil, fmt.Errorf("failed to load credentials: %w", err)
 	}
 	conn, err := grpc.DialContext(context.Background(), cfg.ServerAddress,
 		grpc.WithPerRPCCredentials(fetchToken()),
@@ -44,7 +45,7 @@ func NewClient() (Client, error) {
 	return &client, err
 }
 
-// Send request to server
+// Send request to the server
 // Recieve statuses till Done
 func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 	// perRPC := fetchToken()
