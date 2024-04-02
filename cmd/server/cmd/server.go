@@ -101,10 +101,7 @@ func (t *TranscribeServer) TranscribeAudio(
 	return nil
 }
 
-// TODO
-// Implement request to DB
-//
-// GetHistory returns array of {audiohash: text} pairs to a client
+// GetHistory returns array of Text fields to a client
 func (t *TranscribeServer) GetHistory(
 	in *sttservice.User,
 	server sttservice.SttService_GetHistoryServer,
