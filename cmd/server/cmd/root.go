@@ -8,6 +8,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -39,7 +41,11 @@ type Config struct {
 }
 
 var cfg Config
+
+var grpcServer *grpc.Server
 var DBConn db.Connector
+var idleConnectionsClosed = make(chan struct{})
+var transcribeServer *TranscribeServer
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -99,20 +105,38 @@ func Execute() {
 		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 		grpc.MaxConcurrentStreams(1),
 	}
-	grpcServer := grpc.NewServer(opts...)
+	grpcServer = grpc.NewServer(opts...)
 
+	transcribeServer = &TranscribeServer{
+		DBClient: dbclient,
+		auth:     *servAuth,
+		Store:    fsstore,
+	}
 	// Register STT Server with Transcribe server instance
 	sttservice.RegisterSttServiceServer(grpcServer,
-		&TranscribeServer{
-			DBClient: dbclient,
-			auth:     *servAuth,
-			Store:    fsstore,
-		})
+		transcribeServer)
 
 	// Run http and grpc server
-	for {
-		log.Fatal(grpcServer.Serve(tcpListen))
-	}
+	go gracefullShutdown()
+
+	log.Fatal(grpcServer.Serve(tcpListen))
+
+	<-idleConnectionsClosed
+
+}
+
+func gracefullShutdown() {
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-sigint
+	log.Println("Shutting down server")
+
+	transcribeServer.DBClient.Close()
+	transcribeServer.Store.Close()
+	grpcServer.GracefulStop()
+
+	close(idleConnectionsClosed)
+
 }
 
 func init() {

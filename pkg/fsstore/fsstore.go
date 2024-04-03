@@ -47,3 +47,7 @@ func (f *FSStore) Get(name string) ([]byte, error) {
 func (f *FSStore) GetStorePath() string {
 	return f.Path
 }
+
+func (f *FSStore) Close() error {
+	return nil
+}

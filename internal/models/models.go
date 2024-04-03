@@ -23,6 +23,7 @@ type Store interface {
 	Save(string, []byte) error
 	Get(string) ([]byte, error)
 	GetStorePath() string
+	Close() error
 }
 
 // Structure to provide username throuh context to handlers
