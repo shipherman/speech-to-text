@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/pkg/audioconverter"
@@ -22,6 +23,8 @@ type Client interface {
 type STTClient struct {
 	sttservice.SttServiceClient
 }
+
+const reqTimeoutSeconds time.Duration = 30
 
 var audio sttservice.Audio
 
@@ -81,6 +84,7 @@ func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 		case sttservice.EnumStatus_STATUS_DECLINED:
 			return "", fmt.Errorf("audio file could not be processed")
 		}
+		time.Sleep(reqTimeoutSeconds * time.Second)
 	}
 }
 
