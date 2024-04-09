@@ -70,7 +70,9 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 	// - get user obj from db -
-	user, err := t.DBClient.GetUser(context.Background(), email)
+	// Get context from the server stream
+	ctx := stream.Context()
+	user, err := t.DBClient.GetUser(ctx, email)
 	if err != nil {
 		return err
 	}

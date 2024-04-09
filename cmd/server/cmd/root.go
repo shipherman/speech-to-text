@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"log"
 	"net"
@@ -121,16 +122,19 @@ func Execute() {
 
 	log.Fatal(grpcServer.Serve(tcpListen))
 
+	// Waiting for channel to get closed after graceful shutdown
 	<-idleConnectionsClosed
 
 }
 
+// Implements graceful shutdown
 func gracefullShutdown() {
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-sigint
 	log.Println("Shutting down server")
 
+	// Closing connection to Database and blob store
 	transcribeServer.DBClient.Close()
 	transcribeServer.Store.Close()
 	grpcServer.GracefulStop()
@@ -195,7 +199,9 @@ func init() {
 			"Timeout for authenticator server provides to clients")
 
 		// Configure db schema
-	err := db.ConfigureSchema(cfg.DSN)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancelFunc()
+	err := db.ConfigureSchema(ctx, cfg.DSN)
 	if err != nil {
 		log.Fatal(err)
 	}
