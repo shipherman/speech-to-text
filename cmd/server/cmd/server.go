@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
-	"github.com/shipherman/speech-to-text/internal/clients"
 	"github.com/shipherman/speech-to-text/internal/db"
+	clients "github.com/shipherman/speech-to-text/internal/lib"
 	"github.com/shipherman/speech-to-text/internal/models"
 	"github.com/shipherman/speech-to-text/internal/services/auth"
 	"github.com/shipherman/speech-to-text/pkg/audioconverter"

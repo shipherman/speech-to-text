@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/shipherman/speech-to-text/internal/client"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		c, err := NewClient()
+		c, err := client.NewClient(cfg)
 		if err != nil {
 			log.Println(err)
 		}

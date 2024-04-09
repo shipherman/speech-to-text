@@ -7,23 +7,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/shipherman/speech-to-text/internal/client"
 	"github.com/spf13/cobra"
 )
 
-// TODO
-// Add JSON configuration support
-type Options struct {
-	ServerAddress string `json:"server_address"`
-	FilePath      string
-	CACert        string
-	AuthToken     string
-	Timeout       time.Duration
-	User          string
-	Email         string
-	Password      string
-}
-
-var cfg Options
+var cfg client.Options
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -42,12 +30,6 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-
-	// Run request
-	// err = SendRequest()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
 }
 
 func init() {

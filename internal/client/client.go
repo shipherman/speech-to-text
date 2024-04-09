@@ -1,4 +1,4 @@
-package cmd
+package client
 
 import (
 	"context"
@@ -22,6 +22,20 @@ type Client interface {
 
 type STTClient struct {
 	sttservice.SttServiceClient
+	cfg Options
+}
+
+// TODO
+// Add JSON configuration support
+type Options struct {
+	ServerAddress string `json:"server_address"`
+	FilePath      string
+	CACert        string
+	AuthToken     string
+	Timeout       time.Duration
+	User          string
+	Email         string
+	Password      string
 }
 
 const reqTimeout time.Duration = 3
@@ -29,14 +43,14 @@ const reqTimeout time.Duration = 3
 var audio sttservice.Audio
 
 // NewCient creates a new instance of a connection to the server
-func NewClient() (Client, error) {
+func NewClient(cfg Options) (Client, error) {
 	var client STTClient
 	creds, err := credentials.NewClientTLSFromFile(cfg.CACert, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load credentials: %w", err)
 	}
 	conn, err := grpc.DialContext(context.Background(), cfg.ServerAddress,
-		grpc.WithPerRPCCredentials(fetchToken()),
+		grpc.WithPerRPCCredentials(fetchToken(cfg.AuthToken)),
 		grpc.WithTransportCredentials(creds),
 	)
 	if err != nil {
@@ -44,6 +58,8 @@ func NewClient() (Client, error) {
 	}
 
 	client.SttServiceClient = sttservice.NewSttServiceClient(conn)
+
+	client.cfg = cfg
 
 	return &client, err
 }
@@ -57,7 +73,7 @@ func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 
 	// sample audio load
 	// and check if it has appropriate headers
-	audio.Audio, err = readAudioFromFile()
+	audio.Audio, err = c.readAudioFromFile()
 	if err != nil {
 		return "", err
 	}
@@ -137,16 +153,17 @@ func (c *STTClient) GetHistory(ctx context.Context) error {
 }
 
 // read audio file
-func readAudioFromFile() ([]byte, error) {
-	audioBytes, err := os.ReadFile(cfg.FilePath)
+func (c *STTClient) readAudioFromFile() ([]byte, error) {
+	audioBytes, err := os.ReadFile(c.cfg.FilePath)
 	if err != nil {
 		return nil, err
 	}
 	return audioBytes, nil
 }
 
-func fetchToken() *tokenAuth {
+// fetch token from client configuration
+func fetchToken(token string) *tokenAuth {
 	return &tokenAuth{
-		token: cfg.AuthToken,
+		token: token,
 	}
 }
