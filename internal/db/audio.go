@@ -7,12 +7,12 @@ import (
 )
 
 // SaveNewAudio creates new tuple in table Audio
-func (c *Connector) SaveNewAudio(audioHash string, audioText string, u *ent.User) (*ent.Audio, error) {
+func (c *Connector) SaveNewAudio(ctx context.Context, audioHash string, audioText string, u *ent.User) (*ent.Audio, error) {
 	entAudio, err := c.Client.Audio.Create().
 		SetHash(audioHash).
 		SetUser(u).
 		SetText(audioText).
-		Save(context.Background())
+		Save(ctx)
 	if err != nil {
 		return entAudio, err
 	}

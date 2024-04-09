@@ -77,7 +77,7 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 	// - save to db -
-	t.DBClient.SaveNewAudio(audioFileHashSum, audioText, user)
+	t.DBClient.SaveNewAudio(ctx, audioFileHashSum, audioText, user)
 
 	// Save audio to store
 	err = t.Store.Save(audioFileHashSum, audio.Audio)

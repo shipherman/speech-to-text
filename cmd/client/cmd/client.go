@@ -24,7 +24,7 @@ type STTClient struct {
 	sttservice.SttServiceClient
 }
 
-const reqTimeoutSeconds time.Duration = 30
+const reqTimeout time.Duration = 3
 
 var audio sttservice.Audio
 
@@ -53,10 +53,16 @@ func NewClient() (Client, error) {
 func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 	// perRPC := fetchToken()
 
+	var err error
+
 	// sample audio load
 	// and check if it has appropriate headers
-	audio.Audio = readAudioFromFile()
-	_, err := audioconverter.CheckWAVHeader(audio.Audio)
+	audio.Audio, err = readAudioFromFile()
+	if err != nil {
+		return "", err
+	}
+
+	_, err = audioconverter.CheckWAVHeader(audio.Audio)
 	if err != nil {
 		return "", err
 	}
@@ -84,7 +90,7 @@ func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 		case sttservice.EnumStatus_STATUS_DECLINED:
 			return "", fmt.Errorf("audio file could not be processed")
 		}
-		time.Sleep(reqTimeoutSeconds * time.Second)
+		time.Sleep(reqTimeout * time.Second)
 	}
 }
 
@@ -131,12 +137,12 @@ func (c *STTClient) GetHistory(ctx context.Context) error {
 }
 
 // read audio file
-func readAudioFromFile() []byte {
+func readAudioFromFile() ([]byte, error) {
 	audioBytes, err := os.ReadFile(cfg.FilePath)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	return audioBytes
+	return audioBytes, nil
 }
 
 func fetchToken() *tokenAuth {

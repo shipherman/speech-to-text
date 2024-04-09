@@ -139,6 +139,7 @@ func gracefullShutdown() {
 	transcribeServer.Store.Close()
 	grpcServer.GracefulStop()
 
+	log.Println("Server is shutted down")
 	close(idleConnectionsClosed)
 
 }
