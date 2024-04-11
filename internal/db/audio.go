@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/shipherman/speech-to-text/gen/ent"
 )
@@ -18,8 +17,5 @@ func (c *Connector) SaveNewAudio(ctx context.Context, audioHash string, audioTex
 		return nil, err
 	}
 
-	res, err := c.Client.Audio.Query().All(ctx)
-	fmt.Println(res)
-	fmt.Println("results ⬆")
 	return nil, err
 }
