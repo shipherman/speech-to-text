@@ -77,7 +77,11 @@ func (t *TranscribeServer) TranscribeAudio(
 		return err
 	}
 	// - save to db -
-	t.DBClient.SaveNewAudio(ctx, audioFileHashSum, audioText, user)
+	path := t.Store.GetStorePath() + "/" + audioFileHashSum
+	_, err = t.DBClient.SaveNewAudio(ctx, audioFileHashSum, audioText, path, user)
+	if err != nil {
+		return err
+	}
 
 	// Save audio to store
 	err = t.Store.Save(audioFileHashSum, audio.Audio)

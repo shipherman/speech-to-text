@@ -38,7 +38,7 @@ type Options struct {
 	Password      string
 }
 
-const reqTimeout time.Duration = 3
+const reqTimeout time.Duration = 300
 
 var audio sttservice.Audio
 
@@ -106,7 +106,7 @@ func (c *STTClient) SendRequest(ctx context.Context) (string, error) {
 		case sttservice.EnumStatus_STATUS_DECLINED:
 			return "", fmt.Errorf("audio file could not be processed")
 		}
-		time.Sleep(reqTimeout * time.Second)
+		time.Sleep(reqTimeout * time.Microsecond)
 	}
 }
 
@@ -138,18 +138,20 @@ func (c *STTClient) Login(ctx context.Context, e, p string) (string, error) {
 }
 
 func (c *STTClient) GetHistory(ctx context.Context) error {
-	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Email: "e"})
+	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Name: "u", Email: "e"})
 	if err != nil {
 		return err
 	}
 
-	text, err := history.Recv()
-	if err != nil {
-		return err
-	}
+	for {
+		text, err := history.Recv()
+		if err != nil {
+			return err
+		}
+		log.Println(text)
+		time.Sleep(reqTimeout * time.Microsecond)
 
-	fmt.Println(text)
-	return nil
+	}
 }
 
 // read audio file

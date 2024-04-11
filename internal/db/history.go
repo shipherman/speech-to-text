@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/shipherman/speech-to-text/gen/ent"
 	"github.com/shipherman/speech-to-text/gen/ent/audio"
@@ -17,6 +18,12 @@ func (c *Connector) GetHistory(ctx context.Context, email string) ([]*ent.Audio,
 	if err != nil {
 		return nil, err
 	}
+
+	a, err := c.Client.Audio.Query().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(a)
 
 	return entAudioArr, nil
 }
