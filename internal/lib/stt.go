@@ -1,5 +1,5 @@
 // Interaction with STT service [docker image with STT model deployed]
-package clients
+package lib
 
 import (
 	"fmt"
