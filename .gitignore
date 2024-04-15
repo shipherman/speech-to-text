@@ -23,4 +23,6 @@ bin/
 # Go workspace file
 go.work
 
+# Mocks
+mock/
 
