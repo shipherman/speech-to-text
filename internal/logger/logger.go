@@ -1,3 +1,4 @@
+// Logger for the server
 package logger
 
 import (
@@ -7,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// ZapInterceptor used by GRPC server to log it's stream ivents
 func ZapInterceptor() *zap.Logger {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
