@@ -133,9 +133,9 @@ func gracefullShutdown() {
 	log.Println("Shutting down server")
 
 	// Closing connection to Database and blob store
-	transcribeServer.DBClient.Close()
-	transcribeServer.Store.Close()
 	grpcServer.GracefulStop()
+	transcribeServer.Store.Close()
+	transcribeServer.DBClient.Close()
 
 	log.Println("Server is shutted down")
 	close(idleConnectionsClosed)
