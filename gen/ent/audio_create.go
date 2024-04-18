@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -35,6 +36,12 @@ func (ac *AudioCreate) SetHash(s string) *AudioCreate {
 // SetText sets the "text" field.
 func (ac *AudioCreate) SetText(s string) *AudioCreate {
 	ac.mutation.SetText(s)
+	return ac
+}
+
+// SetTimestamp sets the "timestamp" field.
+func (ac *AudioCreate) SetTimestamp(t time.Time) *AudioCreate {
+	ac.mutation.SetTimestamp(t)
 	return ac
 }
 
@@ -110,6 +117,9 @@ func (ac *AudioCreate) check() error {
 	if _, ok := ac.mutation.Text(); !ok {
 		return &ValidationError{Name: "text", err: errors.New(`ent: missing required field "Audio.text"`)}
 	}
+	if _, ok := ac.mutation.Timestamp(); !ok {
+		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "Audio.timestamp"`)}
+	}
 	return nil
 }
 
@@ -147,6 +157,10 @@ func (ac *AudioCreate) createSpec() (*Audio, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Text(); ok {
 		_spec.SetField(audio.FieldText, field.TypeString, value)
 		_node.Text = value
+	}
+	if value, ok := ac.mutation.Timestamp(); ok {
+		_spec.SetField(audio.FieldTimestamp, field.TypeTime, value)
+		_node.Timestamp = value
 	}
 	if nodes := ac.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

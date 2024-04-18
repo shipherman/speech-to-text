@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -66,6 +67,20 @@ func (au *AudioUpdate) SetText(s string) *AudioUpdate {
 func (au *AudioUpdate) SetNillableText(s *string) *AudioUpdate {
 	if s != nil {
 		au.SetText(*s)
+	}
+	return au
+}
+
+// SetTimestamp sets the "timestamp" field.
+func (au *AudioUpdate) SetTimestamp(t time.Time) *AudioUpdate {
+	au.mutation.SetTimestamp(t)
+	return au
+}
+
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (au *AudioUpdate) SetNillableTimestamp(t *time.Time) *AudioUpdate {
+	if t != nil {
+		au.SetTimestamp(*t)
 	}
 	return au
 }
@@ -163,6 +178,9 @@ func (au *AudioUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.Text(); ok {
 		_spec.SetField(audio.FieldText, field.TypeString, value)
 	}
+	if value, ok := au.mutation.Timestamp(); ok {
+		_spec.SetField(audio.FieldTimestamp, field.TypeTime, value)
+	}
 	if au.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -250,6 +268,20 @@ func (auo *AudioUpdateOne) SetText(s string) *AudioUpdateOne {
 func (auo *AudioUpdateOne) SetNillableText(s *string) *AudioUpdateOne {
 	if s != nil {
 		auo.SetText(*s)
+	}
+	return auo
+}
+
+// SetTimestamp sets the "timestamp" field.
+func (auo *AudioUpdateOne) SetTimestamp(t time.Time) *AudioUpdateOne {
+	auo.mutation.SetTimestamp(t)
+	return auo
+}
+
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (auo *AudioUpdateOne) SetNillableTimestamp(t *time.Time) *AudioUpdateOne {
+	if t != nil {
+		auo.SetTimestamp(*t)
 	}
 	return auo
 }
@@ -376,6 +408,9 @@ func (auo *AudioUpdateOne) sqlSave(ctx context.Context) (_node *Audio, err error
 	}
 	if value, ok := auo.mutation.Text(); ok {
 		_spec.SetField(audio.FieldText, field.TypeString, value)
+	}
+	if value, ok := auo.mutation.Timestamp(); ok {
+		_spec.SetField(audio.FieldTimestamp, field.TypeTime, value)
 	}
 	if auo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

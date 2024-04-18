@@ -18,6 +18,8 @@ const (
 	FieldHash = "hash"
 	// FieldText holds the string denoting the text field in the database.
 	FieldText = "text"
+	// FieldTimestamp holds the string denoting the timestamp field in the database.
+	FieldTimestamp = "timestamp"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the audio in the database.
@@ -37,6 +39,7 @@ var Columns = []string{
 	FieldPath,
 	FieldHash,
 	FieldText,
+	FieldTimestamp,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "audios"
@@ -88,6 +91,11 @@ func ByHash(opts ...sql.OrderTermOption) OrderOption {
 // ByText orders the results by the text field.
 func ByText(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldText, opts...).ToFunc()
+}
+
+// ByTimestamp orders the results by the timestamp field.
+func ByTimestamp(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimestamp, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.

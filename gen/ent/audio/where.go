@@ -3,6 +3,8 @@
 package audio
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/shipherman/speech-to-text/gen/ent/predicate"
@@ -66,6 +68,11 @@ func Hash(v string) predicate.Audio {
 // Text applies equality check predicate on the "text" field. It's identical to TextEQ.
 func Text(v string) predicate.Audio {
 	return predicate.Audio(sql.FieldEQ(FieldText, v))
+}
+
+// Timestamp applies equality check predicate on the "timestamp" field. It's identical to TimestampEQ.
+func Timestamp(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldEQ(FieldTimestamp, v))
 }
 
 // PathEQ applies the EQ predicate on the "path" field.
@@ -261,6 +268,46 @@ func TextEqualFold(v string) predicate.Audio {
 // TextContainsFold applies the ContainsFold predicate on the "text" field.
 func TextContainsFold(v string) predicate.Audio {
 	return predicate.Audio(sql.FieldContainsFold(FieldText, v))
+}
+
+// TimestampEQ applies the EQ predicate on the "timestamp" field.
+func TimestampEQ(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldEQ(FieldTimestamp, v))
+}
+
+// TimestampNEQ applies the NEQ predicate on the "timestamp" field.
+func TimestampNEQ(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldNEQ(FieldTimestamp, v))
+}
+
+// TimestampIn applies the In predicate on the "timestamp" field.
+func TimestampIn(vs ...time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldIn(FieldTimestamp, vs...))
+}
+
+// TimestampNotIn applies the NotIn predicate on the "timestamp" field.
+func TimestampNotIn(vs ...time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldNotIn(FieldTimestamp, vs...))
+}
+
+// TimestampGT applies the GT predicate on the "timestamp" field.
+func TimestampGT(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldGT(FieldTimestamp, v))
+}
+
+// TimestampGTE applies the GTE predicate on the "timestamp" field.
+func TimestampGTE(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldGTE(FieldTimestamp, v))
+}
+
+// TimestampLT applies the LT predicate on the "timestamp" field.
+func TimestampLT(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldLT(FieldTimestamp, v))
+}
+
+// TimestampLTE applies the LTE predicate on the "timestamp" field.
+func TimestampLTE(v time.Time) predicate.Audio {
+	return predicate.Audio(sql.FieldLTE(FieldTimestamp, v))
 }
 
 // HasUser applies the HasEdge predicate on the "user" edge.

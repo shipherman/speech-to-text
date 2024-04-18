@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -37,6 +38,7 @@ type AudioMutation struct {
 	_path         *string
 	hash          *string
 	text          *string
+	timestamp     *time.Time
 	clearedFields map[string]struct{}
 	user          *int
 	cleareduser   bool
@@ -251,6 +253,42 @@ func (m *AudioMutation) ResetText() {
 	m.text = nil
 }
 
+// SetTimestamp sets the "timestamp" field.
+func (m *AudioMutation) SetTimestamp(t time.Time) {
+	m.timestamp = &t
+}
+
+// Timestamp returns the value of the "timestamp" field in the mutation.
+func (m *AudioMutation) Timestamp() (r time.Time, exists bool) {
+	v := m.timestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimestamp returns the old "timestamp" field's value of the Audio entity.
+// If the Audio object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AudioMutation) OldTimestamp(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimestamp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimestamp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimestamp: %w", err)
+	}
+	return oldValue.Timestamp, nil
+}
+
+// ResetTimestamp resets all changes to the "timestamp" field.
+func (m *AudioMutation) ResetTimestamp() {
+	m.timestamp = nil
+}
+
 // SetUserID sets the "user" edge to the User entity by id.
 func (m *AudioMutation) SetUserID(id int) {
 	m.user = &id
@@ -324,7 +362,7 @@ func (m *AudioMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AudioMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m._path != nil {
 		fields = append(fields, audio.FieldPath)
 	}
@@ -333,6 +371,9 @@ func (m *AudioMutation) Fields() []string {
 	}
 	if m.text != nil {
 		fields = append(fields, audio.FieldText)
+	}
+	if m.timestamp != nil {
+		fields = append(fields, audio.FieldTimestamp)
 	}
 	return fields
 }
@@ -348,6 +389,8 @@ func (m *AudioMutation) Field(name string) (ent.Value, bool) {
 		return m.Hash()
 	case audio.FieldText:
 		return m.Text()
+	case audio.FieldTimestamp:
+		return m.Timestamp()
 	}
 	return nil, false
 }
@@ -363,6 +406,8 @@ func (m *AudioMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldHash(ctx)
 	case audio.FieldText:
 		return m.OldText(ctx)
+	case audio.FieldTimestamp:
+		return m.OldTimestamp(ctx)
 	}
 	return nil, fmt.Errorf("unknown Audio field %s", name)
 }
@@ -392,6 +437,13 @@ func (m *AudioMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetText(v)
+		return nil
+	case audio.FieldTimestamp:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimestamp(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Audio field %s", name)
@@ -450,6 +502,9 @@ func (m *AudioMutation) ResetField(name string) error {
 		return nil
 	case audio.FieldText:
 		m.ResetText()
+		return nil
+	case audio.FieldTimestamp:
+		m.ResetTimestamp()
 		return nil
 	}
 	return fmt.Errorf("unknown Audio field %s", name)

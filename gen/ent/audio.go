@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -23,6 +24,8 @@ type Audio struct {
 	Hash string `json:"hash,omitempty"`
 	// Text holds the value of the "text" field.
 	Text string `json:"text,omitempty"`
+	// Timestamp holds the value of the "timestamp" field.
+	Timestamp time.Time `json:"timestamp,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AudioQuery when eager-loading is set.
 	Edges        AudioEdges `json:"edges"`
@@ -61,6 +64,8 @@ func (*Audio) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case audio.FieldPath, audio.FieldHash, audio.FieldText:
 			values[i] = new(sql.NullString)
+		case audio.FieldTimestamp:
+			values[i] = new(sql.NullTime)
 		case audio.ForeignKeys[0]: // user_audio
 			values[i] = new(sql.NullInt64)
 		default:
@@ -101,6 +106,12 @@ func (a *Audio) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field text", values[i])
 			} else if value.Valid {
 				a.Text = value.String
+			}
+		case audio.FieldTimestamp:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field timestamp", values[i])
+			} else if value.Valid {
+				a.Timestamp = value.Time
 			}
 		case audio.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -158,6 +169,9 @@ func (a *Audio) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("text=")
 	builder.WriteString(a.Text)
+	builder.WriteString(", ")
+	builder.WriteString("timestamp=")
+	builder.WriteString(a.Timestamp.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

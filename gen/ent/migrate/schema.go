@@ -14,6 +14,7 @@ var (
 		{Name: "path", Type: field.TypeString, Unique: true},
 		{Name: "hash", Type: field.TypeString, Unique: true},
 		{Name: "text", Type: field.TypeString},
+		{Name: "timestamp", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "user_audio", Type: field.TypeInt, Nullable: true},
 	}
 	// AudiosTable holds the schema information for the "audios" table.
@@ -24,7 +25,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "audios_users_audio",
-				Columns:    []*schema.Column{AudiosColumns[4]},
+				Columns:    []*schema.Column{AudiosColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
