@@ -139,7 +139,7 @@ func (c *STTClient) Login(ctx context.Context, e, p string) (string, error) {
 
 // GetHistory prints list of all the previos request results for a current user
 func (c *STTClient) GetHistory(ctx context.Context) error {
-	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Name: "u", Email: "e"})
+	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Name: c.cfg.User, Email: c.cfg.Email})
 	if err != nil {
 		return err
 	}
