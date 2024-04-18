@@ -32,8 +32,6 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Println(err)
 		}
-
-		// Show the result
 	},
 }
 

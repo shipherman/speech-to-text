@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/shipherman/speech-to-text/gen/ent"
 )
@@ -12,6 +13,7 @@ func (c *Connector) SaveNewAudio(ctx context.Context, audioHash string, audioTex
 		SetHash(audioHash).
 		SetUser(u).
 		SetPath(path).
+		SetTimestamp(time.Now().UTC()).
 		SetText(audioText).Exec(ctx)
 	if err != nil {
 		return nil, err
