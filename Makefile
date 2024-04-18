@@ -15,6 +15,10 @@ gen-proto:
 build-stt-docker:
 	@ docker build ./cmd/stt/Dockerfile -t dss:latest
 
+.PHONY: gen-db
+gen-db:
+	@ go generate ./gen/ent
+
 # Replace local assets with GitHub one
 .PHONY: run-stt-docker
 run-stt-docker:
