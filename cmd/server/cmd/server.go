@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 
 	sttservice "github.com/shipherman/speech-to-text/gen/stt/service/v1"
 	"github.com/shipherman/speech-to-text/internal/db"
@@ -113,6 +114,16 @@ func (t *TranscribeServer) GetHistory(
 	server sttservice.SttService_GetHistoryServer,
 ) error {
 	var text sttservice.Text
+
+	//Check user email
+	email, err := t.auth.GetEmail(server.Context())
+	if err != nil {
+		return err
+	}
+	if email != in.Email {
+		return fmt.Errorf("wrong email provided")
+	}
+
 	history, err := t.DBClient.GetHistory(server.Context(), in.Email)
 	if err != nil {
 		return err
@@ -121,6 +132,7 @@ func (t *TranscribeServer) GetHistory(
 	for _, k := range history {
 		text.Text = k.Text
 		text.Len = text.GetLen()
+		text.Timestamp = k.Timestamp.String()
 
 		err = server.Send(&text)
 		if err != nil {

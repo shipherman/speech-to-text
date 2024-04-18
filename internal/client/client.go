@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -139,7 +140,7 @@ func (c *STTClient) Login(ctx context.Context, e, p string) (string, error) {
 
 // GetHistory prints list of all the previos request results for a current user
 func (c *STTClient) GetHistory(ctx context.Context) error {
-	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Name: c.cfg.User, Email: c.cfg.Email})
+	history, err := c.SttServiceClient.GetHistory(ctx, &sttservice.User{Email: c.cfg.Email})
 	if err != nil {
 		return err
 	}
@@ -147,9 +148,15 @@ func (c *STTClient) GetHistory(ctx context.Context) error {
 	for {
 		text, err := history.Recv()
 		if err != nil {
+			// Stop receaving messages from the server
+			// if stream is over
+			if err == io.EOF {
+				return nil
+			}
 			return err
 		}
-		log.Println(text)
+		// Output results to console
+		fmt.Println(text)
 		time.Sleep(reqTimeout * time.Microsecond)
 
 	}

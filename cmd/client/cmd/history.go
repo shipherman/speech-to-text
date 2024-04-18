@@ -59,4 +59,12 @@ func init() {
 		"",
 		"Authentication token string")
 	historyCmd.MarkFlagRequired("authtoken")
+	historyCmd.Flags().StringVarP(
+		&cfg.Email,
+		"email",
+		"e",
+		"",
+		"User email")
+	historyCmd.MarkFlagRequired("email")
+
 }

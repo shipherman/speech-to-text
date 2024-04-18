@@ -59,4 +59,5 @@ message Audio {
 message Text {
     string text = 1;
     int32 len = 2;
+    string timestamp = 3;
 }
