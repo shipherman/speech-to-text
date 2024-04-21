@@ -1,27 +1,20 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
 	"os"
+	"time"
 
+	"github.com/shipherman/speech-to-text/internal/client"
 	"github.com/spf13/cobra"
 )
 
-
+var cfg client.Options
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "client",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Speech-to-text client",
+	Long:  `Speech-to-text client allows to transcribe audio files to text via remote NN service`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -46,6 +39,20 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVarP(
+		&cfg.ServerAddress,
+		"server_address",
+		"a",
+		"localhost:8282",
+		"STT server address")
+	rootCmd.PersistentFlags().StringVar(
+		&cfg.CACert,
+		"cacert",
+		"./cert_test/ca_cert.pem",
+		"Path to CA certificate")
+	rootCmd.PersistentFlags().DurationVar(
+		&cfg.Timeout,
+		"timeout",
+		time.Minute*1,
+		"Command execution timeout")
 }
-
-
